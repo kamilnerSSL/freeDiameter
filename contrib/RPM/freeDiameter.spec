@@ -1,78 +1,58 @@
+Name:           freeDiameter
+Version:        1.5.0
+Release:        1%{?dist}
+Summary:        Open source Diameter protocol implementation
 
-Name: freeDiameter		
-Version: 1.1.6 	
-Release: 1%{?dist}
-Packager: krum.boy4ev@gmail.com
-Summary: freeDiameter is an implementation of the Diameter protocol. 	
-Group: Development/Libraries		
-License: BSD License	
-URL: http://www.freediameter.net		
-Source0: http://www.freediameter.net/hg/freeDiameter/archive/1.1.6.tar.gz	
+License:        BSD
+URL:            https://github.com/freeDiameter/freeDiameter
+Source0:        %{name}-%{version}.tar.gz
 
-BuildRequires: cmake make gcc gcc-c++ flex bison lksctp-tools-devel 
-BuildRequires: gnutls-devel libgcrypt-devel libidn2-devel
-BuildRequires: mercurial	
-Requires: lksctp-tools	
+BuildRequires:  cmake
+BuildRequires:  gcc
+BuildRequires:  make
+BuildRequires:  gnutls-devel
+BuildRequires:  libidn-devel
+BuildRequires:  libtool
+BuildRequires:  pkgconfig
+BuildRequires:  json-c-devel
+BuildRequires:  sqlite-devel
+BuildRequires:  libpcap-devel
+
+Requires:       gnutls
+Requires:       json-c
+Requires:       sqlite
+
+# Define install prefix with conditional
+%global install_prefix %{?_with_local_prefix:/usr/local}%{!?_with_local_prefix:/usr}
 
 %description
-freeDiameter is an implementation of the Diameter protocol.
-	
-Diameter is a protocol designed to carry Authentication, Authorization and
-Accounting (AAA) payload. It is an evolution of the RADIUS protocol (as the
-name suggests).
-
-See http://www.freediameter.net/ for more information on the project.
-	
-freeDiameter was previously known as the "waaad" project (WIDE AAA Daemon)
-This project is not related to the "freediameter" project from Sun on sourceforge.
-	
-Author: Sebastien Decugis.
-
-%package daemon
-Summary:  Simple daemon parses the command line and initializes the freeDiameter framework.
-Group: Development/Libraries
-Requires: freeDiameter
-
-%description daemon
-freeDiameterd : this simple daemon parses the command line and initializes the
-freeDiameter framework. Use it for your Diameter server & agent components.
-In case of Diameter clients, you probably will prefer linking the libfdcore
-directly with your client application that must be made Diameter-aware.
-
+freeDiameter is an open-source Diameter protocol implementation. It is modular, extensible,
+and aims to conform to relevant IETF and 3GPP specifications for AAA protocols.
 
 %prep
-%setup -qn %{name}-%{version}
-
+%autosetup
 
 %build
 mkdir -p build
 cd build
-cmake ../
-
-make %{?_smp_mflags}
-
+%cmake .. -DCMAKE_INSTALL_PREFIX=%{install_prefix}
+%cmake_build
 
 %install
-rm -rf $RPM_BUILD_ROOT
 cd build
-make install DESTDIR=$RPM_BUILD_ROOT
-make test
-
-%post daemon
-echo "/usr/local/lib/" > /etc/ld.so.conf.d/%{name}.conf 
-/sbin/ldconfig
+%cmake_install
 
 %files
-%defattr(-,root,root,-)
-/usr/local/include/
-/usr/local/lib/
-
-%files daemon
-%defattr(-,root,root,-)
-/usr/local/bin/
-
-
+%license COPYING
+%doc README.md
+%{install_prefix}/bin/*
+%{install_prefix}/lib*/libfd*.so*
+%{install_prefix}/lib*/libfd*.a
+%{install_prefix}/include/freeDiameter/
+%{install_prefix}/lib*/pkgconfig/freeDiameter.pc
+%{install_prefix}/share/freeDiameter/
 
 %changelog
- * Sat Jul 5 2013 Krum Boychev <krum.boy4ev@gmail.com> - 1.1.6-1
- - initial version
+* Fri May 09 2025 Keith Milner <kamilner@sslconsult.com> - 1.5.0-1
+- RPM packaging with dynamic install prefix support via --with local_prefix
+
