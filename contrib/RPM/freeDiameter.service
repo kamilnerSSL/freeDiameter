@@ -2,14 +2,14 @@
 Description=Freediameter server
 Documentation=https://freediameter.net/trac/
 After=network.target
+StartLimitIntervalSec=30
+StartLimitBurst=2
 
 [Service]
 NoNewPrivileges=true
 User=root
 ExecStart=/usr/bin/freeDiameterd -s -D -c/etc/freeDiameter/freeDiameter.conf
 Type=forking
-StartLimitIntervalSec=30
-StartLimitBurst=2
 Restart=on-failure
 
 [Install]
