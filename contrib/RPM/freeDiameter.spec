@@ -56,6 +56,9 @@ mkdir -p %{buildroot}/etc/freeDiameter
 install -m 0644 doc/freediameter.conf.sample %{buildroot}/etc/freeDiameter/freeDiameter.conf.sample
 mkdir -p %{buildroot}/etc/systemd/system
 install -m 0644 contrib/RPM/freeDiameter.service %{buildroot}/etc/systemd/system/freeDiameter.service
+# Install extensions
+mkdir -p %{buildroot}/usr/lib/freeDiameter
+cp -r %{builddir}/redhat-linux-build/extensions/*.fdx %{buildroot}/usr/lib/freeDiameter/
 
 %post
 systemctl daemon-reload
@@ -72,6 +75,7 @@ systemctl daemon-reload
 %{_libdir}/libfdproto.so.%{version}
 /etc/freeDiameter/freeDiameter.conf.sample
 /etc/systemd/system/freeDiameter.service
+/usr/lib/freeDiameter/*.fdx  # Include the extensions
 
 %files devel
 %{_includedir}/%{name}/
