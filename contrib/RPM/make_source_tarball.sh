@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set version - this should match the Version tag in the .spec file
-VERSION=1.5.0
+VERSION=1.6.0
 PKG_NAME=freeDiameter
 
 # Output tarball name
@@ -24,7 +24,7 @@ git archive --format=tar.gz --prefix=${PKG_NAME}-${VERSION}/ HEAD > "$TARBALL"
 # Move to SOURCES if rpmbuild directory exists
 if [ -d ~/rpmbuild/SOURCES ]; then
     echo "Copying tarball to ~/rpmbuild/SOURCES/"
-    cp "$TARBALL" ~/rpmbuild/SOURCES/
+    mv "$TARBALL" ~/rpmbuild/SOURCES/
 fi
 
 echo "Done."

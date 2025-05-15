@@ -1,58 +1,84 @@
+## START: Set by rpmautospec
+## (rpmautospec version 0.6.5)
+## RPMAUTOSPEC: autorelease, autochangelog
+%define autorelease(e:s:pb:n) %{?-p:0.}%{lua:
+    release_number = 18;
+    base_release_number = tonumber(rpm.expand("%{?-b*}%{!?-b:1}"));
+    print(release_number + base_release_number - 1);
+}%{?-e:.%{-e*}}%{?-s:.%{-s*}}%{!?-n:%{?dist}}
+## END: Set by rpmautospec
+
+%global _hardened_build 1
+
 Name:           freeDiameter
-Version:        1.5.0
-Release:        1%{?dist}
-Summary:        Open source Diameter protocol implementation
+Version:        1.6.0
+Release:        %autorelease
+Summary:        A Diameter protocol open implementation
 
-License:        BSD
-URL:            https://github.com/freeDiameter/freeDiameter
-Source0:        %{name}-%{version}.tar.gz
+License:        BSD-3-Clause
+URL:            http://www.freediameter.net/
+Source0:        https://github.com/%{name}/%{name}/archive/%{version}/%{name}-%{version}.tar.gz
 
+BuildRequires:  bison
 BuildRequires:  cmake
+BuildRequires:  flex
 BuildRequires:  gcc
-BuildRequires:  make
+BuildRequires:  gcc-c++
 BuildRequires:  gnutls-devel
+BuildRequires:  libgcrypt-devel
 BuildRequires:  libidn-devel
-BuildRequires:  libtool
-BuildRequires:  pkgconfig
-BuildRequires:  json-c-devel
-BuildRequires:  sqlite-devel
-BuildRequires:  libpcap-devel
-
-Requires:       gnutls
-Requires:       json-c
-Requires:       sqlite
-
-# Define install prefix with conditional
-%global install_prefix %{?_with_local_prefix:/usr/local}%{!?_with_local_prefix:/usr}
+BuildRequires:  lksctp-tools-devel
 
 %description
-freeDiameter is an open-source Diameter protocol implementation. It is modular, extensible,
-and aims to conform to relevant IETF and 3GPP specifications for AAA protocols.
+freeDiameter is an open source Diameter protocol implementation. It provides an
+extensible platform for deploying a Diameter network for your Authentication,
+Authorization and Accounting needs.
+
+%package devel
+Summary:        Library for freeDiameter package
+Requires:       %{name} = %{version}-%{release}
+
+%description devel
+The %{name}-devel package contains the shared library
+for %{name} package.
 
 %prep
 %autosetup
 
 %build
-mkdir -p build
-cd build
-%cmake .. -DCMAKE_INSTALL_PREFIX=%{install_prefix}
+%cmake -DCMAKE_INSTALL_PREFIX=%{_prefix} -DCMAKE_BUILD_TYPE=None . -Wno-dev
 %cmake_build
 
 %install
-cd build
 %cmake_install
+#  Install additional files
+mkdir -p %{buildroot}/etc/freeDiameter
+install -m 0644 doc/freediameter.conf.sample %{buildroot}/etc/freeDiameter/freeDiameter.conf.sample
+mkdir -p %{buildroot}/etc/systemd/system
+install -m 0644 contrib/RPM/freeDiameter.service %{buildroot}/etc/systemd/system/freeDiameter.service
+
+%post
+systemctl daemon-reload
+
+%ldconfig_scriptlets
 
 %files
-%license COPYING
-%doc README.md
-%{install_prefix}/bin/*
-%{install_prefix}/lib*/libfd*.so*
-%{install_prefix}/lib*/libfd*.a
-%{install_prefix}/include/freeDiameter/
-%{install_prefix}/lib*/pkgconfig/freeDiameter.pc
-%{install_prefix}/share/freeDiameter/
+%doc doc
+%{_bindir}/freeDiameterd
+%{_bindir}/%{name}d-%{version}
+%{_libdir}/libfdcore.so.7
+%{_libdir}/libfdproto.so.7
+%{_libdir}/libfdcore.so.%{version}
+%{_libdir}/libfdproto.so.%{version}
+/etc/freeDiameter/freeDiameter.conf.sample
+/etc/systemd/system/freeDiameter.service
+
+%files devel
+%{_includedir}/%{name}/
+%{_libdir}/%{name}/
+%{_libdir}/libfdcore.so
+%{_libdir}/libfdproto.so
 
 %changelog
-* Fri May 09 2025 Keith Milner <kamilner@sslconsult.com> - 1.5.0-1
-- RPM packaging with dynamic install prefix support via --with local_prefix
-
+* Thu May 15 2025 Keith Milner <kamilner@sslconsult.com> - 1.6.0-1
+- Initial RPM release for freeDiameter.
