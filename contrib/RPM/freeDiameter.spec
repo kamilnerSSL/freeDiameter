@@ -58,7 +58,7 @@ mkdir -p %{buildroot}/etc/systemd/system
 install -m 0644 contrib/RPM/freeDiameter.service %{buildroot}/etc/systemd/system/freeDiameter.service
 # Install extensions
 mkdir -p %{buildroot}/usr/lib/freeDiameter
-cp -r %{builddir}/redhat-linux-build/extensions/*.fdx %{buildroot}/usr/lib/freeDiameter/
+install -m 0644 %{builddir}/redhat-linux-build/extensions/*.fdx %{buildroot}/usr/lib/freeDiameter/
 
 %post
 systemctl daemon-reload
