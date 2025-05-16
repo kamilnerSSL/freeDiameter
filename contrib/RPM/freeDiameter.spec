@@ -5,7 +5,7 @@
 }%{?-e:.%{-e*}}%{?-s:.%{-s*}}%{!?-n:%{?dist}}
 
 %global _hardened_build 1
-%define customversion .custom # Define custom version macro
+%define customversion .ringer
 
 Name:           freeDiameter
 Version:        1.6.0
