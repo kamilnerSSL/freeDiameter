@@ -1,18 +1,16 @@
-## START: Set by rpmautospec
-## (rpmautospec version 0.6.5)
-## RPMAUTOSPEC: autorelease, autochangelog
 %define autorelease(e:s:pb:n) %{?-p:0.}%{lua:
-    release_number = 18;
+    release_number = 1;
     base_release_number = tonumber(rpm.expand("%{?-b*}%{!?-b:1}"));
     print(release_number + base_release_number - 1);
 }%{?-e:.%{-e*}}%{?-s:.%{-s*}}%{!?-n:%{?dist}}
-## END: Set by rpmautospec
 
 %global _hardened_build 1
+# Define custom version macro
+%define customversion .ringer
 
 Name:           freeDiameter
 Version:        1.6.0
-Release:        %autorelease
+Release:        %autorelease%{?customversion}
 Summary:        A Diameter protocol open implementation
 
 License:        BSD-3-Clause
@@ -28,6 +26,7 @@ BuildRequires:  gnutls-devel
 BuildRequires:  libgcrypt-devel
 BuildRequires:  libidn-devel
 BuildRequires:  lksctp-tools-devel
+BuildRequires:  chrpath
 
 %description
 freeDiameter is an open source Diameter protocol implementation. It provides an
@@ -79,7 +78,7 @@ systemctl daemon-reload
 %{_libdir}/libfdproto.so.%{version}
 /etc/freeDiameter/freeDiameter.conf.sample
 /etc/systemd/system/freeDiameter.service
-/usr/lib/freeDiameter/*.fdx  # Include the extensions
+/usr/lib/freeDiameter/*.fdx
 
 %files devel
 %{_includedir}/%{name}/
@@ -90,3 +89,6 @@ systemctl daemon-reload
 %changelog
 * Thu May 15 2025 Keith Milner <kamilner@sslconsult.com> - 1.6.0-1
 - Initial RPM release for freeDiameter.
++
+* Fri May 16 2025 Keith Milner <kamilner@sslconsult.com> - 1.6.0-2
+- Add custom version extension.
