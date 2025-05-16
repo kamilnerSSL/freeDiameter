@@ -62,6 +62,7 @@ mkdir -p %{buildroot}/usr/lib/freeDiameter
 install -m 0644 redhat-linux-build/extensions/*.fdx %{buildroot}/usr/lib/freeDiameter/
 # Remove rpaths from fdx files
 find %{buildroot}/usr/lib/freeDiameter/ -type f -exec chrpath --delete {} \;
+mkdir -p %{buildroot}/etc/rsyslog.d
 install -m 0644 contrib/RPM/rsyslog-freeDiameter.conf %{buildroot}/etc/rsyslog.d/40-freeDiameter.conf
 # Create logging directory
 mkdir -p %{buildroot}/var/log/freeDiameter
