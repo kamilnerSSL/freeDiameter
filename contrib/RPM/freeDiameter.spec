@@ -46,6 +46,8 @@ for %{name} package.
 %autosetup
 
 %build
+# Set rpath to ""
+export CMAKE_SKIP_RPATH=TRUE
 %cmake -DCMAKE_INSTALL_PREFIX=%{_prefix} -DCMAKE_BUILD_TYPE=None . -Wno-dev
 %cmake_build
 
@@ -58,7 +60,9 @@ mkdir -p %{buildroot}/etc/systemd/system
 install -m 0644 contrib/RPM/freeDiameter.service %{buildroot}/etc/systemd/system/freeDiameter.service
 # Install extensions
 mkdir -p %{buildroot}/usr/lib/freeDiameter
-install -m 0644 %{builddir}/redhat-linux-build/extensions/*.fdx %{buildroot}/usr/lib/freeDiameter/
+install -m 0644 redhat-linux-build/extensions/*.fdx %{buildroot}/usr/lib/freeDiameter/
+# Remove rpaths from fdx files
+find %{buildroot}/usr/lib/freeDiameter/ -type f -exec chrpath --delete {} \;
 
 %post
 systemctl daemon-reload
