@@ -46,6 +46,8 @@ FD_EXTENSION_SUBDIR(dict_dcca         "Diameter CC (RFC4006) Dictionary definiti
 FD_EXTENSION_SUBDIR(dict_dcca_3gpp    "Diameter CC 3GPP Dictionary definitions [incomplete]" ON)
 FD_EXTENSION_SUBDIR(dict_dcca_starent "Diameter CC Starent Dictionary definitions" ON)
 
+FD_EXTENSION_SUBDIR(dict_s6a  "Diameter S6a 3GPP Dictionary definitions [incomplete]" ON)
+
 FD_EXTENSION_SUBDIR(dict_sip    "Diameter SIP (RFC4740) Dictionary definitions" ON)
 
 FD_EXTENSION_SUBDIR(dict_mip6a     "Diameter Mobile IPv6 Auth Dictionary definitions"         ON)
