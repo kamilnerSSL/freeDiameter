@@ -128,7 +128,7 @@ Description: Diameter Mobile IPv6 application dictionary support.
 
 Package: freediameter-dictionary-legacy
 Architecture: any
-Depends: ${misc:Depends}, freediameter-common (= ${binary:Version}), libxml23GPP TS 29.272
+Depends: ${misc:Depends}, freediameter-common (= ${binary:Version}), libxml2
 Description: Legacy XML dictionary files support.
  This freeDiameter extension allows the use of XML dictionary
  files with the freeDiameter framework. Please note that
@@ -159,7 +159,7 @@ Description: 3GPP DCCA support.
  Currently this extension is not complete: only AVP definitions 
  are included. See the source file for more details.
 
-Package: freediameter-dictionary-3gp-s6a
+Package: freediameter-dictionary-3gpp-s6a
 Architecture: any
 Depends: ${misc:Depends}, freediameter-common (= ${binary:Version})
 Description: 3GPP S6a support.
