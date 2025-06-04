@@ -128,7 +128,7 @@ Description: Diameter Mobile IPv6 application dictionary support.
 
 Package: freediameter-dictionary-legacy
 Architecture: any
-Depends: ${misc:Depends}, freediameter-common (= ${binary:Version}), libxml2
+Depends: ${misc:Depends}, freediameter-common (= ${binary:Version}), libxml23GPP TS 29.272
 Description: Legacy XML dictionary files support.
  This freeDiameter extension allows the use of XML dictionary
  files with the freeDiameter framework. Please note that
