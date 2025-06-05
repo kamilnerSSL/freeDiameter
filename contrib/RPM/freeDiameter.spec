@@ -1,5 +1,5 @@
 %define autorelease(e:s:pb:n) %{?-p:0.}%{lua:
-    release_number = 4;
+    release_number = 5;
     base_release_number = tonumber(rpm.expand("%{?-b*}%{!?-b:1}"));
     print(release_number + base_release_number - 1);
 }%{?-e:.%{-e*}}%{?-s:.%{-s*}}%{!?-n:%{?dist}}
@@ -47,7 +47,7 @@ for %{name} package.
 %build
 # Set rpath to ""
 export CMAKE_SKIP_RPATH=TRUE
-%cmake -DCMAKE_INSTALL_PREFIX=%{_prefix} -DCMAKE_BUILD_TYPE=None . -Wno-dev
+%cmake -DCMAKE_INSTALL_PREFIX=%{_prefix} -DCMAKE_BUILD_TYPE=None -DBUILD_RT_EREG:BOOL=ON -DBUILD_APP_REDIRECT:BOOL=ON -DBUILD_TEST_APP:BOOL=ON -DDIAMID_IDNA_IGNORE:BOOL=ON -DDIAMID_IDNA_REJECT:BOOL=ON -DBUILD_TEST_RT_ANY:BOOL=O . -Wno-dev
 %cmake_build
 
 %install

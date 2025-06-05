@@ -119,3 +119,4 @@ IF (CMAKE_BUILD_TYPE MATCHES "Debug")
 	FD_EXTENSION_SUBDIR(test_rt_any "Routing extension randomly sending message to any peer available, for testing purpose" OFF)
 ENDIF (CMAKE_BUILD_TYPE MATCHES "Debug")
 
+FD_EXTENSION_SUBDIR(dict_S6as6d "dict_S6as6d extension library" ON)
