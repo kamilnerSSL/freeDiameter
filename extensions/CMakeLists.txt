@@ -118,3 +118,6 @@ IF (CMAKE_BUILD_TYPE MATCHES "Debug")
 	FD_EXTENSION_SUBDIR(test_acct   "Receive Accounting-Requests and display the data, but no storage" OFF)
 	FD_EXTENSION_SUBDIR(test_rt_any "Routing extension randomly sending message to any peer available, for testing purpose" OFF)
 ENDIF (CMAKE_BUILD_TYPE MATCHES "Debug")
+
+## For 3GPP s6a
+FD_EXTENSION_SUBDIR(dict_s6a        "3GPP Dictionary for s6a" ON)
