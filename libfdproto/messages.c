@@ -204,6 +204,8 @@ static void init_msg ( struct msg * msg )
 	
 	fd_list_init(&msg->msg_pmdl.sentinel, NULL);
 	CHECK_POSIX_DO( pthread_mutex_init(&msg->msg_pmdl.lock, NULL), );
+	msg->msg_pmdl.src_addr = NULL;
+	msg->msg_pmdl.dest_addr = NULL;
 }
 
 
@@ -681,6 +683,11 @@ static int destroy_obj (struct msg_avp_chain * obj )
 	if ((obj->type == MSG_MSG) && (_M(obj)->msg_sess != NULL)) {
 		CHECK_FCT_DO( fd_sess_reclaim_msg ( &_M(obj)->msg_sess ), /* continue */);
 	}
+
+	if ((obj->type == MSG_MSG) && (_M(obj)->msg_pmdl.src_addr != NULL))
+		free(_M(obj)->msg_pmdl.src_addr);
+	if ((obj->type == MSG_MSG) && (_M(obj)->msg_pmdl.dest_addr != NULL))
+		free(_M(obj)->msg_pmdl.dest_addr);
 	
 	if ((obj->type == MSG_MSG) && (_M(obj)->msg_pmdl.sentinel.o != NULL)) {
 		((void (*)(struct fd_msg_pmdl *))_M(obj)->msg_pmdl.sentinel.o)(&_M(obj)->msg_pmdl);
@@ -1542,6 +1549,31 @@ struct fd_msg_pmdl * fd_msg_pmdl_get(struct msg * msg)
 	return &msg->msg_pmdl;
 }
 
+/**
+ * Set the destination address for the message's per-message data list.
+ *
+ * This function assigns a copy of the provided destination address (dest) to the
+ * msg->msg_pmdl.dest_addr field, freeing any previously set address. If dest is NULL,
+ * the destination address is cleared.
+ *
+ * @param msg  Pointer to the message whose destination address is to be set.
+ * @param dest Pointer to the sSS structure containing the destination address, or NULL to clear.
+ */
+void fd_msg_pmdl_setdest(struct msg * msg, sSS * dest)
+{
+	struct fd_msg_pmdl * pmdl;
+	CHECK_PARAMS_DO( CHECK_MSG(msg), return );
+	pmdl = &msg->msg_pmdl;
+	if (pmdl->dest_addr) {
+		free(pmdl->dest_addr);
+		pmdl->dest_addr = NULL;
+	}
+	if (dest) {
+		CHECK_MALLOC_DO( pmdl->dest_addr = malloc(sizeof(sSS)), return );
+		memcpy(pmdl->dest_addr, dest, sizeof(sSS));
+	}
+}
+```
 
 /******************* End-to-end counter *********************/
 static uint32_t fd_eteid;
@@ -2892,5 +2924,3 @@ out:
 	CHECK_POSIX_DO(r2 = pthread_rwlock_unlock(&fd_disp_lock), /* ignore */ );
 	return ret ?: r2;
 }
-
-

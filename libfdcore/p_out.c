@@ -46,7 +46,7 @@ static int do_send(struct msg ** msg, struct cnxctx * cnx, uint32_t * hbh, struc
 	uint32_t bkp_hbh = 0;
 	struct msg *cpy_for_logs_only;
 	
-	TRACE_ENTRY("%p %p %p %p", msg, cnx, hbh, peer);
+	TRACE_ENTRY("%p %p %p %p %p", msg, cnx, hbh, peer, dest);
 	
 	/* Retrieve the message header */
 	CHECK_FCT( fd_msg_hdr(*msg, &hdr) );
@@ -77,7 +77,7 @@ static int do_send(struct msg ** msg, struct cnxctx * cnx, uint32_t * hbh, struc
 	pthread_cleanup_push((void *)fd_msg_free, *msg /* might be NULL, no problem */);
 	
 	/* Send the message */
-	CHECK_FCT_DO( ret = fd_cnx_send(cnx, buf, sz), );
+	CHECK_FCT_DO( ret = fd_cnx_send(cnx, buf, sz, dest), );
 	
 	pthread_cleanup_pop(0);
 	
@@ -120,7 +120,10 @@ static void * out_thr(void * arg)
 		CHECK_FCT_DO( fd_fifo_get(peer->p_tosend, &msg), goto error );
 		
 		/* Send the message, log any error */
-		CHECK_FCT_DO( ret = do_send(&msg, peer->p_cnxctx, &peer->p_hbh, peer),
+		struct fd_msg_pmdl * pmdl = fd_msg_pmdl_get(msg);
+		sSS * dest = pmdl ? pmdl->dest_addr : NULL;
+
+		CHECK_FCT_DO( ret = do_send(&msg, peer->p_cnxctx, &peer->p_hbh, peer, dest),
 			{
 				if (msg) {
 					char buf[256];
@@ -191,10 +194,13 @@ int fd_out_send(struct msg ** msg, struct cnxctx * cnx, struct fd_peer * peer, i
 			hbh = &peer->p_hbh;
 
 		if (!cnx)
-			cnx = peer->p_cnxctx;
+			cnx = peer ? peer->p_cnxctx : NULL;
+
+		struct fd_msg_pmdl * pmdl = fd_msg_pmdl_get(*msg);
+		sSS * dest = pmdl ? pmdl->dest_addr : NULL;
 
 		/* Do send the message */
-		CHECK_FCT_DO( ret = do_send(msg, cnx, hbh, peer),
+		CHECK_FCT_DO( ret = do_send(msg, cnx, hbh, peer, dest),
 			{
 				if (msg) {
 					char buf[256];

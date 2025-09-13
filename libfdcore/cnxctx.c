@@ -1616,11 +1616,11 @@ int fd_cnx_recv_setaltfifo(struct cnxctx * conn, struct fifo * alt_fifo)
 }
 
 /* Send function when no multi-stream is involved, or sending on stream #0 (send() always use stream 0)*/
-static int send_simple(struct cnxctx * conn, unsigned char * buf, size_t len)
+static int send_simple(struct cnxctx * conn, unsigned char * buf, size_t len, sSS *dest)
 {
 	ssize_t ret;
 	size_t sent = 0;
-	TRACE_ENTRY("%p %p %zd", conn, buf, len);
+	TRACE_ENTRY("%p %p %zd %p", conn, buf, len, dest);
 	do {
 		if (fd_cnx_teststate(conn, CC_STATUS_TLS)) {
 			CHECK_GNUTLS_DO( ret = fd_tls_send_handle_error(conn, conn->cc_tls_para.session, buf + sent, len - sent),  );
@@ -1628,7 +1628,7 @@ static int send_simple(struct cnxctx * conn, unsigned char * buf, size_t len)
 			struct iovec iov;
 			iov.iov_base = buf + sent;
 			iov.iov_len  = len - sent;
-			CHECK_SYS_DO( ret = fd_cnx_s_sendv(conn, &iov, 1), );
+			CHECK_SYS_DO( ret = fd_cnx_s_sendv(conn, &iov, 1, dest), );
 		}
 		if (ret <= 0)
 			return ENOTCONN;
@@ -1639,9 +1639,9 @@ static int send_simple(struct cnxctx * conn, unsigned char * buf, size_t len)
 }
 
 /* Send a message -- this is synchronous -- and we assume it's never called by several threads at the same time (on the same conn), so we don't protect. */
-int fd_cnx_send(struct cnxctx * conn, unsigned char * buf, size_t len)
+int fd_cnx_send(struct cnxctx * conn, unsigned char * buf, size_t len, sSS *dest)
 {
-	TRACE_ENTRY("%p %p %zd", conn, buf, len);
+	TRACE_ENTRY("%p %p %zd %p", conn, buf, len, dest);
 
 	CHECK_PARAMS(conn && (conn->cc_socket > 0) && (! fd_cnx_teststate(conn, CC_STATUS_ERROR)) && buf && len);
 
@@ -1649,7 +1649,7 @@ int fd_cnx_send(struct cnxctx * conn, unsigned char * buf, size_t len)
 
 	switch (conn->cc_proto) {
 		case IPPROTO_TCP:
-			CHECK_FCT( send_simple(conn, buf, len) );
+			CHECK_FCT( send_simple(conn, buf, len, dest) );
 			break;
 
 #ifndef DISABLE_SCTP
@@ -1673,14 +1673,13 @@ int fd_cnx_send(struct cnxctx * conn, unsigned char * buf, size_t len)
 
 				if (stream == 0) {
 					/* We can use default function, it sends over stream #0 */
-					CHECK_FCT( send_simple(conn, buf, len) );
+					CHECK_FCT( send_simple(conn, buf, len, dest) );
 				} else {
 					if (!fd_cnx_teststate(conn, CC_STATUS_TLS)) {
 						struct iovec iov;
 						iov.iov_base = buf;
 						iov.iov_len  = len;
-
-						CHECK_SYS_DO( fd_sctp_sendstrv(conn, stream, &iov, 1), { fd_cnx_markerror(conn); return ENOTCONN; } );
+						CHECK_SYS_DO( fd_sctp_sendstrv(conn, stream, &iov, 1, dest), { fd_cnx_markerror(conn); return ENOTCONN; } );
 					} else {
 						/* push the data to the appropriate session */
 						ssize_t ret;
@@ -1698,7 +1697,7 @@ int fd_cnx_send(struct cnxctx * conn, unsigned char * buf, size_t len)
 			} else {
 				/* DTLS */
 				/* Multistream is handled at lower layer in the push/pull function */
-				CHECK_FCT( send_simple(conn, buf, len) );
+				CHECK_FCT( send_simple(conn, buf, len, dest) );
 			}
 		}
 		break;

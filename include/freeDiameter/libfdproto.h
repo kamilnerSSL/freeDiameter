@@ -2634,9 +2634,14 @@ int fd_msg_sess_set(struct msg * msg, struct session * session);
 /* Helper for the hooks mechanism, for use from libfdcore */
 struct fd_msg_pmdl {
 	struct fd_list sentinel; /* if the sentinel.o field is NULL, the structure is not initialized. Otherwise it points to the cleanup function in libfdcore. */
+	sSS *src_addr;
+	sSS *dest_addr;
 	pthread_mutex_t lock;
 };
 struct fd_msg_pmdl * fd_msg_pmdl_get(struct msg * msg);
+size_t fd_msg_pmdl_sizewithoverhead(size_t datalen);
+struct fd_msg_pmdl * fd_msg_pmdl_get_inbuf(uint8_t * buf, size_t datalen);
+void fd_msg_pmdl_setdest(struct msg * msg, sSS * dest);
 
 
 /***************************************/

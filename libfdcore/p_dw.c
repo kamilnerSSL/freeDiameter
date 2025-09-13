@@ -108,7 +108,13 @@ int fd_p_dw_handle(struct msg ** msg, int req, struct fd_peer * peer)
 		/* If we receive a DWR, send back a DWA */
 		CHECK_FCT( fd_msg_new_answer_from_req ( fd_g_config->cnf_dict, msg, 0 ) );
 		CHECK_FCT( fd_msg_rescode_set( *msg, "DIAMETER_SUCCESS", NULL, NULL, 0 ) );
+
+		/* Retrieve the local address on which the DWR was received, and use it for sending the DWA */
+		struct fd_msg_pmdl * pmdl = fd_msg_pmdl_get(*msg);
+		if (pmdl && pmdl->src_addr)
+			fd_msg_pmdl_setdest( *msg, pmdl->src_addr );
 		CHECK_FCT( fd_msg_add_origin ( *msg, 1 ) );
+
 		CHECK_FCT( fd_out_send( msg, peer->p_cnxctx, peer, 0) );
 		
 	} else {
@@ -177,5 +183,3 @@ int fd_p_dw_reopen(struct fd_peer * peer)
 	
 	return 0;
 }
-
-

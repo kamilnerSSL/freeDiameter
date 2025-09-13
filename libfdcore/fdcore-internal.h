@@ -305,7 +305,7 @@ int fd_out_start(struct fd_peer * peer);
 int fd_out_stop(struct fd_peer * peer);
 
 /* Initiating connections */
-int fd_p_cnx_init(struct fd_peer * peer);
+int fd_p_cnx_init(struct fd_peer * peer, sSS *src);
 void fd_p_cnx_abort(struct fd_peer * peer, int cleanup_all);
 
 /* Peer sent requests cache */
@@ -359,10 +359,10 @@ int		fd_cnx_unordered_delivery(struct cnxctx * conn, int is_allowed);
 int             fd_cnx_getcred(struct cnxctx * conn, const gnutls_datum_t **cert_list, unsigned int *cert_list_size);
 int 		fd_cnx_get_local_eps(struct fd_list * list);
 int             fd_cnx_getremoteeps(struct cnxctx * conn, struct fd_list * eps);
-char *          fd_cnx_getremoteid(struct cnxctx * conn);
+char *          fd_cnx_getremoteid(struct cnxctx * conn, sSS *addr);
 int             fd_cnx_receive(struct cnxctx * conn, struct timespec * timeout, unsigned char **buf, size_t * len);
 int             fd_cnx_recv_setaltfifo(struct cnxctx * conn, struct fifo * alt_fifo); /* send FDEVP_CNX_MSG_RECV event to the fifo list */
-int             fd_cnx_send(struct cnxctx * conn, unsigned char * buf, size_t len);
+int             fd_cnx_send(struct cnxctx * conn, unsigned char * buf, size_t len, sSS *dest);
 void            fd_cnx_destroy(struct cnxctx * conn);
 int             fd_tls_verify_credentials_2(gnutls_session_t session);
 
@@ -370,7 +370,5 @@ int             fd_tls_verify_credentials_2(gnutls_session_t session);
 void   fd_hook_call(enum fd_hook_type type, struct msg * msg, struct fd_peer * peer, void * other, struct fd_msg_pmdl * pmdl);
 void   fd_hook_associate(struct msg * msg, struct fd_msg_pmdl * pmdl);
 int    fd_hooks_init(void);
-size_t fd_msg_pmdl_sizewithoverhead(size_t datalen);
-struct fd_msg_pmdl * fd_msg_pmdl_get_inbuf(uint8_t * buf, size_t datalen); 
 
 #endif /* _FDCORE_INTERNAL_H */

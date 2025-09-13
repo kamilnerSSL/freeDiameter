@@ -1126,7 +1126,7 @@ ssize_t fd_sctp_sendstrv(struct cnxctx * conn, uint16_t strid, const struct iove
 	ssize_t ret;
 	struct timespec ts, now;
 	
-	TRACE_ENTRY("%p %hu %p %d", conn, strid, iov, iovcnt);
+	TRACE_ENTRY("%p %hu %p %d %p", conn, strid, iov, iovcnt, dest);
 	CHECK_PARAMS_DO(conn && iov && iovcnt, { errno = EINVAL; return -1; } );
 	CHECK_SYS_DO(  clock_gettime(CLOCK_REALTIME, &ts), return -1 );
 	
@@ -1156,7 +1156,11 @@ ssize_t fd_sctp_sendstrv(struct cnxctx * conn, uint16_t strid, const struct iove
 #endif /* OLD_SCTP_SOCKET_API */
 	/* note : we could store other data also, for example in .sinfo_ppid for remote peer or in .sinfo_context for errors. */
 	
-	/* We don't use mhdr.msg_name here; it could be used to specify an address different from the primary */
+	if (dest) {
+		mhdr.msg_name = dest;
+		mhdr.msg_namelen = sSAlen(dest);
+	}
+	/* If dest is NULL, the message is sent to the primary address */
 	
 	mhdr.msg_iov    = (struct iovec *)iov;
 	mhdr.msg_iovlen = iovcnt;
