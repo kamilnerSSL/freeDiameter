@@ -371,4 +371,8 @@ void   fd_hook_call(enum fd_hook_type type, struct msg * msg, struct fd_peer * p
 void   fd_hook_associate(struct msg * msg, struct fd_msg_pmdl * pmdl);
 int    fd_hooks_init(void);
 
+/* Re-add missing function declarations if their implementations exist */
+size_t fd_msg_pmdl_sizewithoverhead(struct fd_msg_pmdl *pmdl);
+unsigned char *fd_msg_pmdl_get_inbuf(struct fd_msg_pmdl *pmdl);
+
 #endif /* _FDCORE_INTERNAL_H */

@@ -194,7 +194,7 @@ int fd_out_send(struct msg ** msg, struct cnxctx * cnx, struct fd_peer * peer, i
 			hbh = &peer->p_hbh;
 
 		if (!cnx)
-			cnx = peer ? peer->p_cnxctx : NULL;
+			cnx = peer->p_cnxctx;
 
 		struct fd_msg_pmdl * pmdl = fd_msg_pmdl_get(*msg);
 		sSS * dest = pmdl ? pmdl->dest_addr : NULL;

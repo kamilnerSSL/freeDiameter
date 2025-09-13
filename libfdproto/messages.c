@@ -1554,10 +1554,10 @@ struct fd_msg_pmdl * fd_msg_pmdl_get(struct msg * msg)
  *
  * This function assigns a copy of the provided destination address (dest) to the
  * msg->msg_pmdl.dest_addr field, freeing any previously set address. If dest is NULL,
- * the destination address is cleared.
- *
- * @param msg  Pointer to the message whose destination address is to be set.
- * @param dest Pointer to the sSS structure containing the destination address, or NULL to clear.
+	if (pmdl->dest_addr != NULL) {
+		free(pmdl->dest_addr);
+		pmdl->dest_addr = NULL;
+	}
  */
 void fd_msg_pmdl_setdest(struct msg * msg, sSS * dest)
 {

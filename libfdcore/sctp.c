@@ -1112,7 +1112,7 @@ stop:
 #define FD_SCTP_SECURED_DIAMETER_PPID 47
 
 /* Send a vector over a specified stream */
-ssize_t fd_sctp_sendstrv(struct cnxctx * conn, uint16_t strid, const struct iovec *iov, int iovcnt)
+ssize_t fd_sctp_sendstrv(struct cnxctx * conn, uint16_t strid, const struct iovec *iov, int iovcnt, sSA *dest)
 {
 	struct msghdr mhdr;
 	struct cmsghdr 		*hdr;
