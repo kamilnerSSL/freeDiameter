@@ -97,7 +97,6 @@ FD_EXTENSION_SUBDIR(dbg_dict_dump   "Log dictionary dump"                       
 FD_EXTENSION_SUBDIR(dbg_dict_dump_json   "Dump dictionary as JSON"                            OFF)
 FD_EXTENSION_SUBDIR(dbg_loglevel "Read loglevel from file -- allows runtime change"  ON)
 FD_EXTENSION_SUBDIR(dbg_monitor     "Outputs periodical status information"              ON)
-FD_EXTENSION_SUBDIR(dbg_metrics     "Provides Prometheus metrics"              ON)
 FD_EXTENSION_SUBDIR(dbg_msg_timings "Show some timing information for messages"      ON)
 FD_EXTENSION_SUBDIR(dbg_msg_dumps   "Show human-readable content of the received & sent messages"      ON)
 FD_EXTENSION_SUBDIR(dbg_rt          "Routing extension for debugging the routing module" ON)
