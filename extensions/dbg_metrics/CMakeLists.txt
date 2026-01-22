@@ -18,4 +18,4 @@ FD_ADD_EXTENSION(metrics metrics.c)
 TARGET_LINK_LIBRARIES(metrics ${MHD_LIBRARY})
 
 # Installation path (Adjust /usr/lib/freeDiameter if your distro differs)
-INSTALL(TARGETS metrics LIBRARY DESTINATION /usr/lib/freeDiameter)
+INSTALL(TARGETS metrics LIBRARY DESTINATION ${INSTALL_EXTENSIONS_DIR})
