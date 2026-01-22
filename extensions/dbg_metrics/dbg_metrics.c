@@ -69,7 +69,6 @@ void buf_free(struct resp_buffer *b) {
 }
 
 /* --- 2. State Mapping Helper --- */
-/* --- 2. State Mapping Helper (Updated) --- */
 int map_state_to_int(enum peer_state state) {
     switch (state) {
         /* Stable states */
@@ -102,13 +101,30 @@ int map_state_to_int(enum peer_state state) {
 }
 
 /* --- 3. HTTP Handler --- */
-static enum MHD_Result handle_request(void *cls, struct MHD_Connection *connection,
-                                      const char *url, const char *method,
-                                      const char *version, const char *upload_data,
-                                      size_t *upload_data_size, void **con_cls) {
+static int handle_request(void *cls, struct MHD_Connection *connection,
+                          const char *url, const char *method,
+                          const char *version, const char *upload_data,
+                          size_t *upload_data_size, void **con_cls) {
 
-    if (strcmp(method, "GET") != 0 || strcmp(url, "/metrics") != 0) {
-        return MHD_NO; 
+    if (strcmp(method, "GET") != 0) {
+        return MHD_NO;
+    }
+
+    // Health check endpoint
+    if (strcmp(url, "/") == 0 || strcmp(url, "/health") == 0) {
+        const char *health_response = "OK";
+        struct MHD_Response *response;
+        response = MHD_create_response_from_buffer(strlen(health_response), 
+                                                    (void *)health_response, 
+                                                    MHD_RESPMEM_PERSISTENT);
+        int mhd_ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
+        MHD_destroy_response(response);
+        return mhd_ret;
+    }
+
+    // Metrics endpoint
+    if (strcmp(url, "/metrics") != 0) {
+        return MHD_NO;
     }
 
     struct resp_buffer buf;
