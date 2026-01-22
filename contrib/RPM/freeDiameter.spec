@@ -1,7 +1,7 @@
 %global _build_id_links none
 
 %define autorelease(e:s:pb:n) %{?-p:0.}%{lua:
-    release_number = 5;
+    release_number = 1;
     base_release_number = tonumber(rpm.expand("%{?-b*}%{!?-b:1}"));
     print(release_number + base_release_number - 1);
 }%{?-e:.%{-e*}}%{?-s:.%{-s*}}%{!?-n:%{?dist}}
@@ -48,7 +48,6 @@ necessary for developing extensions for %{name}.
 %autosetup
 
 %build
-# Set rpath to "" to avoid RPATH errors in RPM
 export CMAKE_SKIP_RPATH=TRUE
 
 %cmake \
@@ -135,8 +134,9 @@ install -m 0644 doc/freediameter.conf.sample %{buildroot}%{_sysconfdir}/freeDiam
 %{_libdir}/libfdproto.so
 
 %changelog
-* Wed Jan 22 2025 Keith Milner <kamilner@sslconsult.com> - 1.6.1-5
-- Updated to v1.6.1
+* Wed Jan 22 2025 Keith Milner <kamilner@sslconsult.com> - 1.6.1-1
+- Updated to v 1.6.1
+- Added Fixup section to handle nested absolute paths in BUILDROOT.
 - Forced libraries and extensions into %%{_libdir} via CMake PATH flags.
 * Fri May 31 2024 Keith Milner <kamilner@sslconsult.com> - 1.6.0-5
 - Fix binary and library filenames in %%files to match project restructuring.
