@@ -1,7 +1,7 @@
 %global _build_id_links none
 
 %define autorelease(e:s:pb:n) %{?-p:0.}%{lua:
-    release_number = 2;
+    release_number = 3;
     base_release_number = tonumber(rpm.expand("%{?-b*}%{!?-b:1}"));
     print(release_number + base_release_number - 1);
 }%{?-e:.%{-e*}}%{?-s:.%{-s*}}%{!?-n:%{?dist}}
@@ -136,6 +136,8 @@ install -m 0644 doc/freediameter.conf.sample %{buildroot}%{_sysconfdir}/freeDiam
 %{_libdir}/libfdproto.so
 
 %changelog
+* Wed Jan 22 2026 Keith Milner <kamilner@sslconsult.com> - 1.6.1-3
+- Enhanced dbg_metrics extension.
 * Wed Jan 22 2026 Keith Milner <kamilner@sslconsult.com> - 1.6.1-2
 - Added dbg_metrics extension.
 * Wed Jan 22 2025 Keith Milner <kamilner@sslconsult.com> - 1.6.1-1
