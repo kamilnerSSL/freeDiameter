@@ -56,7 +56,8 @@ int eaptlslex(YYSTYPE *lvalp, YYLTYPE *llocp);
 %parse-param {struct tls_config * config} 
 %pure_parser
 /*%defines */
-%error-verbose
+/* %error-verbose */
+%define parse.error verbose
 %debug 
 
 %union {

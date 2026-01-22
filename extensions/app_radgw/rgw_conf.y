@@ -39,14 +39,16 @@
 
 /* For development only : */
 %debug 
-%error-verbose
+/* %error-verbose */
+%define parse.error verbose
 
 /* The parser receives the configuration file filename as parameter */
 %parse-param {char * conffile}
 
 /* Keep track of location */
 %locations 
-%pure-parser
+/* %pure-parser */
+%define api.pure
 
 %{
 #include "rgw.h"
