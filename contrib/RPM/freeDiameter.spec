@@ -28,6 +28,7 @@ BuildRequires:  gnutls-devel
 BuildRequires:  libgcrypt-devel
 BuildRequires:  libidn-devel
 BuildRequires:  lksctp-tools-devel
+BuildRequires:  libmicrohttpd-devel
 BuildRequires:  chrpath
 BuildRequires:  systemd-rpm-macros
 
