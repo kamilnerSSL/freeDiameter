@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.6)
-PROJECT("dbg_metrics" C)
+PROJECT("metrics" C)
 
 # Find libmicrohttpd headers
 FIND_PATH(MHD_INCLUDE_DIR microhttpd.h)
@@ -11,7 +11,11 @@ ENDIF()
 
 INCLUDE_DIRECTORIES(${MHD_INCLUDE_DIR})
 
+# Define the extension library
 FD_ADD_EXTENSION(dbg_metrics dbg_metrics.c)
 
-TARGET_LINK_LIBRARIES(dbg_metrics ${MHD_LIBRARY})
+# Link against microhttpd
+TARGET_LINK_LIBRARIES(metrics ${MHD_LIBRARY})
+
+# Installation path (Adjust /usr/lib/freeDiameter if your distro differs)
 INSTALL(TARGETS dbg_metrics LIBRARY DESTINATION ${INSTALL_EXTENSIONS_DIR})
