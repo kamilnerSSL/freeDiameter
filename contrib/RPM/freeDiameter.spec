@@ -1,7 +1,7 @@
 %global _build_id_links none
 
 %define autorelease(e:s:pb:n) %{?-p:0.}%{lua:
-    release_number = 1;
+    release_number = 2;
     base_release_number = tonumber(rpm.expand("%{?-b*}%{!?-b:1}"));
     print(release_number + base_release_number - 1);
 }%{?-e:.%{-e*}}%{?-s:.%{-s*}}%{!?-n:%{?dist}}
@@ -58,6 +58,7 @@ export CMAKE_SKIP_RPATH=TRUE
     -DINSTALL_INCLUDE_DIR:PATH=include/freeDiameter \
     -DCMAKE_BUILD_TYPE=None \
     -DBUILD_RT_EREG:BOOL=ON \
+    -DBUILD_DBG_METRICS:BOOL=ON \
     -Wno-dev
 %cmake_build
 
@@ -134,6 +135,8 @@ install -m 0644 doc/freediameter.conf.sample %{buildroot}%{_sysconfdir}/freeDiam
 %{_libdir}/libfdproto.so
 
 %changelog
+* Wed Jan 22 2026 Keith Milner <kamilner@sslconsult.com> - 1.6.1-2
+- Added dbg_metrics extension.
 * Wed Jan 22 2025 Keith Milner <kamilner@sslconsult.com> - 1.6.1-1
 - Updated to v 1.6.1
 - Added Fixup section to handle nested absolute paths in BUILDROOT.
