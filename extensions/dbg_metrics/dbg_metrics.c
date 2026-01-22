@@ -140,7 +140,7 @@ static int handle_request(void *cls, struct MHD_Connection *connection,
     buf_init(&buf);
 
     // -- Peer State Metrics --
-    buf_append(&buf, "# HELP fd_peer_state Peer State: 0=New, 1=Open, 2=Closed, 3=Closing, 4=WaitCnxAck, 5=WaitCnxAckElec, 6=WaitCEA, 8=Suspect, 9=Reopen, 12=Zombie\n");
+    buf_append(&buf, "# HELP fd_peer_state Peer State: 0=New, 1=Open, 2=Closed, 3=Closing, 4=WaitCnxAck, 5=WaitCnxAckElec, 6=WaitCEA, 7=OpenHandshake, 8=Suspect, 9=Reopen, 10=OpenNew, 11=ClosingGrace, 12=Zombie\n");
     buf_append(&buf, "# TYPE fd_peer_state gauge\n");
 
     int ret = pthread_rwlock_rdlock(&fd_g_peers_rw);
