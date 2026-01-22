@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set version - this should match the Version tag in the .spec file
-VERSION=1.6.0
+VERSION=1.6.1
 PKG_NAME=freeDiameter
 
 # Output tarball name
