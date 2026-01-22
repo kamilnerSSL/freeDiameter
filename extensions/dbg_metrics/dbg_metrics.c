@@ -100,7 +100,16 @@ int map_state_to_int(enum peer_state state) {
     }
 }
 
-/* --- 3. HTTP Handler --- */
+/* --- 3. Queue Stats Helper --- */
+void append_queue_metrics(struct resp_buffer *buf, const char *queue_name, 
+                          int current, int limit, int highest, long long total) {
+    buf_append(buf, "fd_queue_current{queue=\"%s\"} %d\n", queue_name, current);
+    buf_append(buf, "fd_queue_limit{queue=\"%s\"} %d\n", queue_name, limit);
+    buf_append(buf, "fd_queue_highest{queue=\"%s\"} %d\n", queue_name, highest);
+    buf_append(buf, "fd_queue_total{queue=\"%s\"} %lld\n", queue_name, total);
+}
+
+/* --- 4. HTTP Handler --- */
 static int handle_request(void *cls, struct MHD_Connection *connection,
                           const char *url, const char *method,
                           const char *version, const char *upload_data,
@@ -130,12 +139,10 @@ static int handle_request(void *cls, struct MHD_Connection *connection,
     struct resp_buffer buf;
     buf_init(&buf);
 
-    // -- Header --
+    // -- Peer State Metrics --
     buf_append(&buf, "# HELP fd_peer_state Peer State: 0=New, 1=Open, 2=Closed, 3=Closing, 4=WaitCnxAck, 5=WaitCnxAckElec, 6=WaitCEA, 8=Suspect, 9=Reopen, 12=Zombie\n");
     buf_append(&buf, "# TYPE fd_peer_state gauge\n");
 
-    // -- Access freeDiameter Internals --
-    // We must lock the list to safely iterate it
     int ret = pthread_rwlock_rdlock(&fd_g_peers_rw);
     if (ret != 0) {
         buf_append(&buf, "# Error: Could not lock peer list\n");
@@ -144,22 +151,71 @@ static int handle_request(void *cls, struct MHD_Connection *connection,
 
         // Iterate over all peers (in any state)
         for (li = fd_g_peers.next; li != &fd_g_peers; li = li->next) {
-            
-            // Extract the peer header from the list node
             struct peer_hdr *peer_hdr = (struct peer_hdr *)li->o;
-
-            // Extract Peer Identity (Diameter Identity)
             char *peer_id = peer_hdr->info.pi_diamid;
             if (!peer_id) peer_id = "unknown";
 
-            // Extract State using the public API
             enum peer_state state = fd_peer_getstate(peer_hdr);
             int state_int = map_state_to_int(state);
 
-            // Add to buffer
             buf_append(&buf, "fd_peer_state{peer=\"%s\"} %d\n", peer_id, state_int);
         }
         
+        pthread_rwlock_unlock(&fd_g_peers_rw);
+    }
+
+    // -- Queue Statistics --
+    buf_append(&buf, "# HELP fd_queue_current Current queue depth\n");
+    buf_append(&buf, "# TYPE fd_queue_current gauge\n");
+    buf_append(&buf, "# HELP fd_queue_limit Queue size limit\n");
+    buf_append(&buf, "# TYPE fd_queue_limit gauge\n");
+    buf_append(&buf, "# HELP fd_queue_highest Highest queue depth reached\n");
+    buf_append(&buf, "# TYPE fd_queue_highest gauge\n");
+    buf_append(&buf, "# HELP fd_queue_total Total items processed\n");
+    buf_append(&buf, "# TYPE fd_queue_total counter\n");
+
+    int current_count, limit_count, highest_count;
+    long long total_count;
+    struct timespec total, blocking, last;
+
+    // Global queues
+    if (fd_stat_getstats(STAT_G_LOCAL, NULL, &current_count, &limit_count, &highest_count, &total_count, &total, &blocking, &last) == 0) {
+        append_queue_metrics(&buf, "local_delivery", current_count, limit_count, highest_count, total_count);
+    }
+
+    if (fd_stat_getstats(STAT_G_INCOMING, NULL, &current_count, &limit_count, &highest_count, &total_count, &total, &blocking, &last) == 0) {
+        append_queue_metrics(&buf, "total_received", current_count, limit_count, highest_count, total_count);
+    }
+
+    if (fd_stat_getstats(STAT_G_OUTGOING, NULL, &current_count, &limit_count, &highest_count, &total_count, &total, &blocking, &last) == 0) {
+        append_queue_metrics(&buf, "total_sending", current_count, limit_count, highest_count, total_count);
+    }
+
+    // Per-peer queues
+    ret = pthread_rwlock_rdlock(&fd_g_peers_rw);
+    if (ret == 0) {
+        struct fd_list *li;
+        for (li = fd_g_peers.next; li != &fd_g_peers; li = li->next) {
+            struct peer_hdr *peer_hdr = (struct peer_hdr *)li->o;
+            char *peer_id = peer_hdr->info.pi_diamid;
+            if (!peer_id) peer_id = "unknown";
+
+            // PSM queue (events)
+            if (fd_stat_getstats(STAT_P_PSM, peer_hdr, &current_count, &limit_count, &highest_count, &total_count, &total, &blocking, &last) == 0) {
+                buf_append(&buf, "fd_peer_psm_queue_current{peer=\"%s\"} %d\n", peer_id, current_count);
+                buf_append(&buf, "fd_peer_psm_queue_limit{peer=\"%s\"} %d\n", peer_id, limit_count);
+                buf_append(&buf, "fd_peer_psm_queue_highest{peer=\"%s\"} %d\n", peer_id, highest_count);
+                buf_append(&buf, "fd_peer_psm_queue_total{peer=\"%s\"} %lld\n", peer_id, total_count);
+            }
+
+            // Outgoing queue
+            if (fd_stat_getstats(STAT_P_TOSEND, peer_hdr, &current_count, &limit_count, &highest_count, &total_count, &total, &blocking, &last) == 0) {
+                buf_append(&buf, "fd_peer_tosend_queue_current{peer=\"%s\"} %d\n", peer_id, current_count);
+                buf_append(&buf, "fd_peer_tosend_queue_limit{peer=\"%s\"} %d\n", peer_id, limit_count);
+                buf_append(&buf, "fd_peer_tosend_queue_highest{peer=\"%s\"} %d\n", peer_id, highest_count);
+                buf_append(&buf, "fd_peer_tosend_queue_total{peer=\"%s\"} %lld\n", peer_id, total_count);
+            }
+        }
         pthread_rwlock_unlock(&fd_g_peers_rw);
     }
 
@@ -167,7 +223,6 @@ static int handle_request(void *cls, struct MHD_Connection *connection,
     struct MHD_Response *response;
     response = MHD_create_response_from_buffer(buf.size, (void *)buf.data, MHD_RESPMEM_MUST_COPY);
     
-    // Clean up our local buffer (MHD made a copy)
     buf_free(&buf);
 
     int mhd_ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
@@ -176,33 +231,29 @@ static int handle_request(void *cls, struct MHD_Connection *connection,
     return mhd_ret;
 }
 
-/* --- 4. Extension Entry Point --- */
+/* --- 5. Extension Entry Point --- */
 static struct MHD_Daemon *http_daemon = NULL;
 
-// Called when freeDiameter loads the extension
 static int metrics_entry(char * conffile) {
     
     fd_log_debug("[metrics] Loading Metrics Extension on port %d...", EXPORTER_PORT);
 
-    // Start the HTTP Server in a background thread
     http_daemon = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION, EXPORTER_PORT, NULL, NULL, 
                                    &handle_request, NULL, MHD_OPTION_END);
 
     if (http_daemon == NULL) {
         fd_log_debug("[metrics] Failed to start HTTP server.");
-        return 1; // Error
+        return 1;
     }
 
     fd_log_debug("[metrics] HTTP server started successfully.");
-    return 0; // Success
+    return 0;
 }
 
-// Called when freeDiameter shuts down (Optional but good practice)
 void fd_ext_fini(void) {
     if (http_daemon) {
         MHD_stop_daemon(http_daemon);
     }
 }
 
-// Register the entry point
 EXTENSION_ENTRY("metrics", metrics_entry);
