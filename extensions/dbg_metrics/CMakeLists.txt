@@ -12,10 +12,10 @@ ENDIF()
 INCLUDE_DIRECTORIES(${MHD_INCLUDE_DIR})
 
 # Define the extension library
-FD_ADD_EXTENSION(metrics metrics.c)
+FD_ADD_EXTENSION(dbg_metrics dbg_metrics.c)
 
 # Link against microhttpd
 TARGET_LINK_LIBRARIES(metrics ${MHD_LIBRARY})
 
 # Installation path (Adjust /usr/lib/freeDiameter if your distro differs)
-INSTALL(TARGETS metrics LIBRARY DESTINATION ${INSTALL_EXTENSIONS_DIR})
+INSTALL(TARGETS dbg_metrics LIBRARY DESTINATION ${INSTALL_EXTENSIONS_DIR})
