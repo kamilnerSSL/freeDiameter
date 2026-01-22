@@ -1,78 +1,105 @@
+%define autorelease(e:s:pb:n) %{?-p:0.}%{lua:
+    release_number = 5;
+    base_release_number = tonumber(rpm.expand("%{?-b*}%{!?-b:1}"));
+    print(release_number + base_release_number - 1);
+}%{?-e:.%{-e*}}%{?-s:.%{-s*}}%{!?-n:%{?dist}}
 
-Name: freeDiameter		
-Version: 1.1.6 	
-Release: 1%{?dist}
-Packager: krum.boy4ev@gmail.com
-Summary: freeDiameter is an implementation of the Diameter protocol. 	
-Group: Development/Libraries		
-License: BSD License	
-URL: http://www.freediameter.net		
-Source0: http://www.freediameter.net/hg/freeDiameter/archive/1.1.6.tar.gz	
+%global _hardened_build 1
+%define customversion .ringer
 
-BuildRequires: cmake make gcc gcc-c++ flex bison lksctp-tools-devel 
-BuildRequires: gnutls-devel libgcrypt-devel libidn2-devel
-BuildRequires: mercurial	
-Requires: lksctp-tools	
+Name:           freeDiameter
+Version:        1.6.0
+Release:        %autorelease%{?customversion}
+Summary:        A Diameter protocol open implementation
+Requires:       kernel-modules-extra
+
+License:        BSD-3-Clause
+URL:            http://www.freediameter.net/
+Source0:        https://github.com/%{name}/%{name}/archive/%{version}/%{name}-%{version}.tar.gz
+
+BuildRequires:  bison
+BuildRequires:  cmake
+BuildRequires:  flex
+BuildRequires:  gcc
+BuildRequires:  gcc-c++
+BuildRequires:  gnutls-devel
+BuildRequires:  libgcrypt-devel
+BuildRequires:  libidn-devel
+BuildRequires:  lksctp-tools-devel
+BuildRequires:  chrpath
 
 %description
-freeDiameter is an implementation of the Diameter protocol.
-	
-Diameter is a protocol designed to carry Authentication, Authorization and
-Accounting (AAA) payload. It is an evolution of the RADIUS protocol (as the
-name suggests).
+freeDiameter is an open source Diameter protocol implementation. It provides an
+extensible platform for deploying a Diameter network for your Authentication,
+Authorization and Accounting needs.
 
-See http://www.freediameter.net/ for more information on the project.
-	
-freeDiameter was previously known as the "waaad" project (WIDE AAA Daemon)
-This project is not related to the "freediameter" project from Sun on sourceforge.
-	
-Author: Sebastien Decugis.
+%package devel
+Summary:        Library for freeDiameter package
+Requires:       %{name} = %{version}-%{release}
 
-%package daemon
-Summary:  Simple daemon parses the command line and initializes the freeDiameter framework.
-Group: Development/Libraries
-Requires: freeDiameter
-
-%description daemon
-freeDiameterd : this simple daemon parses the command line and initializes the
-freeDiameter framework. Use it for your Diameter server & agent components.
-In case of Diameter clients, you probably will prefer linking the libfdcore
-directly with your client application that must be made Diameter-aware.
-
+%description devel
+The %{name}-devel package contains the shared library
+for %{name} package.
 
 %prep
-%setup -qn %{name}-%{version}
-
+%autosetup
 
 %build
-mkdir -p build
-cd build
-cmake ../
-
-make %{?_smp_mflags}
-
+# Set rpath to ""
+export CMAKE_SKIP_RPATH=TRUE
+%cmake -DCMAKE_INSTALL_PREFIX=%{_prefix} -DCMAKE_BUILD_TYPE=None -DBUILD_RT_EREG:BOOL=ON -DBUILD_APP_REDIRECT:BOOL=ON -DBUILD_TEST_APP:BOOL=ON -DDIAMID_IDNA_IGNORE:BOOL=ON -DDIAMID_IDNA_REJECT:BOOL=ON -DBUILD_TEST_RT_ANY:BOOL=O . -Wno-dev
+%cmake_build
 
 %install
-rm -rf $RPM_BUILD_ROOT
-cd build
-make install DESTDIR=$RPM_BUILD_ROOT
-make test
+%cmake_install
+#  Install additional files
+mkdir -p %{buildroot}/etc/freeDiameter
+install -m 0644 doc/freediameter.conf.sample %{buildroot}/etc/freeDiameter/freeDiameter.conf.sample
+mkdir -p %{buildroot}/etc/systemd/system
+install -m 0644 contrib/RPM/freeDiameter.service %{buildroot}/etc/systemd/system/freeDiameter.service
+# Install extensions
+mkdir -p %{buildroot}/usr/lib/freeDiameter
+install -m 0644 redhat-linux-build/extensions/*.fdx %{buildroot}/usr/lib/freeDiameter/
+# Remove rpaths from fdx files
+find %{buildroot}/usr/lib/freeDiameter/ -type f -exec chrpath --delete {} \;
+mkdir -p %{buildroot}/etc/rsyslog.d
+install -m 0644 contrib/RPM/rsyslog-freeDiameter.conf %{buildroot}/etc/rsyslog.d/40-freeDiameter.conf
+# Create logging directory
+mkdir -p %{buildroot}/var/log/freeDiameter
 
-%post daemon
-echo "/usr/local/lib/" > /etc/ld.so.conf.d/%{name}.conf 
-/sbin/ldconfig
+%post
+systemctl daemon-reload
+%ldconfig_scriptlets
 
 %files
-%defattr(-,root,root,-)
-/usr/local/include/
-/usr/local/lib/
+%doc doc
+%{_bindir}/freeDiameterd
+%{_bindir}/%{name}d-%{version}
+%{_libdir}/libfdcore.so.7
+%{_libdir}/libfdproto.so.7
+%{_libdir}/libfdcore.so.%{version}
+%{_libdir}/libfdproto.so.%{version}
+/etc/freeDiameter/freeDiameter.conf.sample
+/etc/systemd/system/freeDiameter.service
+/etc/rsyslog.d/40-freeDiameter.conf
+/usr/lib/freeDiameter/*.fdx
+/var/log/freeDiameter
 
-%files daemon
-%defattr(-,root,root,-)
-/usr/local/bin/
-
-
+%files devel
+%{_includedir}/%{name}/
+%{_libdir}/%{name}/
+%{_libdir}/libfdcore.so
+%{_libdir}/libfdproto.so
 
 %changelog
- * Sat Jul 5 2013 Krum Boychev <krum.boy4ev@gmail.com> - 1.1.6-1
- - initial version
+* Tue May 20 2025 Keith Milner <kamilner@sslconsult.com> - 1.6.0-4
+- Add rsyslog files
++
+* Tue May 20 2025 Keith Milner <kamilner@sslconsult.com> - 1.6.0-3
+- Add kernel-modules-extra as runtime dependency
++
+* Fri May 16 2025 Keith Milner <kamilner@sslconsult.com> - 1.6.0-2
+- Add custom version extension.
++
+* Thu May 15 2025 Keith Milner <kamilner@sslconsult.com> - 1.6.0-1
+- Initial RPM release for freeDiameter.
