@@ -136,9 +136,11 @@ install -m 0644 doc/freediameter.conf.sample %{buildroot}%{_sysconfdir}/freeDiam
 %{_libdir}/libfdproto.so
 
 %changelog
-* Wed Jan 22 2026 Keith Milner <kamilner@sslconsult.com> - 1.6.1-3
+* Thu Jan 22 2026 Keith Milner <kamilner@sslconsult.com> - 1.6.1-4
+- Enhanced dbg_metrics extension with more data and config.
+* Thu Jan 22 2026 Keith Milner <kamilner@sslconsult.com> - 1.6.1-3
 - Enhanced dbg_metrics extension.
-* Wed Jan 22 2026 Keith Milner <kamilner@sslconsult.com> - 1.6.1-2
+* Thu Jan 22 2026 Keith Milner <kamilner@sslconsult.com> - 1.6.1-2
 - Added dbg_metrics extension.
 * Wed Jan 22 2025 Keith Milner <kamilner@sslconsult.com> - 1.6.1-1
 - Updated to v 1.6.1
