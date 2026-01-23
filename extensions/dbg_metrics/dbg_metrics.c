@@ -215,7 +215,7 @@ static int handle_request(void *cls, struct MHD_Connection *connection,
     buf_init(&buf);
 
     // -- Peer State Metrics --
-    buf_append(&buf, "# HELP fd_peer_state Peer State: 0=New, 1=Open, 2=Closed, 3=Closing, 4=WaitCnxAck, 5=WaitCnxAckElec, 6=WaitCEA, 7=OpenHandshake, 8=Suspect, 9=Reopen, 10=OpenNew, 11=ClosingGrace, 12=Zombie, 13=Unknown\n");
+    buf_append(&buf, "# HELP fd_peer_state Peer State: 0=New, 1=Open, 2=Closed, 3=Closing, 4=WaitCnxAck, 5=WaitCnxAckElec, 6=WaitCEA, 7=OpenHandshake, 8=Suspect, 9=Reopen, 10=OpenNew, 11=ClosingGrace, 12=Zombie\n");
     buf_append(&buf, "# TYPE fd_peer_state gauge\n");
     buf_append(&buf, "# HELP fd_peer_messages_received_total Total messages received from peer (processed through state machine)\n");
     buf_append(&buf, "# TYPE fd_peer_messages_received_total counter\n");
@@ -223,6 +223,8 @@ static int handle_request(void *cls, struct MHD_Connection *connection,
     buf_append(&buf, "# TYPE fd_peer_messages_sent_total counter\n");
     buf_append(&buf, "# HELP fd_peer_application_support Application support: 1=auth, 2=acct, 3=both\n");
     buf_append(&buf, "# TYPE fd_peer_application_support gauge\n");
+    buf_append(&buf, "# HELP fd_peer_relay_support Whether peer supports relay application (0=no, 1=yes)\n");
+    buf_append(&buf, "# TYPE fd_peer_relay_support gauge\n");
 
     int ret = pthread_rwlock_rdlock(&fd_g_peers_rw);
     if (ret != 0) {
@@ -240,6 +242,10 @@ static int handle_request(void *cls, struct MHD_Connection *connection,
             int state_int = map_state_to_int(state);
 
             buf_append(&buf, "fd_peer_state{peer=\"%s\"} %d\n", peer_id, state_int);
+
+            // Get relay support
+            int relay_support = peer_hdr->info.runtime.pir_relay ? 1 : 0;
+            buf_append(&buf, "fd_peer_relay_support{peer=\"%s\"} %d\n", peer_id, relay_support);
 
             // Get per-peer message counts
             long long psm_total = 0, tosend_total = 0;
