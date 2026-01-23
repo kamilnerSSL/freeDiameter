@@ -18,6 +18,11 @@
 #include <microhttpd.h>
 
 #define EXPORTER_PORT 9090
+#define EXPORTER_ADDR "127.0.0.1"
+
+/* Global configuration */
+static uint16_t metrics_port = EXPORTER_PORT;
+static const char *metrics_addr = EXPORTER_ADDR;
 
 /* --- 1. Dynamic Buffer Helper --- 
  * (Allows us to construct large responses safely) 
@@ -140,8 +145,14 @@ static int handle_request(void *cls, struct MHD_Connection *connection,
     buf_init(&buf);
 
     // -- Peer State Metrics --
-    buf_append(&buf, "# HELP fd_peer_state Peer State: 0=New, 1=Open, 2=Closed, 3=Closing, 4=WaitCnxAck, 5=WaitCnxAckElec, 6=WaitCEA, 7=OpenHandshake, 8=Suspect, 9=Reopen, 10=OpenNew, 11=ClosingGrace, 12=Zombie\n");
+    buf_append(&buf, "# HELP fd_peer_state Peer State: 0=New, 1=Open, 2=Closed, 3=Closing, 4=WaitCnxAck, 5=WaitCnxAckElec, 6=WaitCEA, 7=OpenHandshake, 8=Suspect, 9=Reopen, 10=OpenNew, 11=ClosingGrace, 12=Zombie, 13=Unknown\n");
     buf_append(&buf, "# TYPE fd_peer_state gauge\n");
+    buf_append(&buf, "# HELP fd_peer_messages_received_total Total messages received from peer (processed through state machine)\n");
+    buf_append(&buf, "# TYPE fd_peer_messages_received_total counter\n");
+    buf_append(&buf, "# HELP fd_peer_messages_sent_total Total messages sent to peer\n");
+    buf_append(&buf, "# TYPE fd_peer_messages_sent_total counter\n");
+    buf_append(&buf, "# HELP fd_peer_application_support Application support: 1=auth, 2=acct, 3=both\n");
+    buf_append(&buf, "# TYPE fd_peer_application_support gauge\n");
 
     int ret = pthread_rwlock_rdlock(&fd_g_peers_rw);
     if (ret != 0) {
@@ -159,6 +170,33 @@ static int handle_request(void *cls, struct MHD_Connection *connection,
             int state_int = map_state_to_int(state);
 
             buf_append(&buf, "fd_peer_state{peer=\"%s\"} %d\n", peer_id, state_int);
+
+            // Get per-peer message counts
+            long long psm_total = 0, tosend_total = 0;
+            int dummy_current, dummy_limit, dummy_highest;
+            struct timespec dummy_time;
+
+            if (fd_stat_getstats(STAT_P_PSM, peer_hdr, &dummy_current, &dummy_limit, &dummy_highest, &psm_total, &dummy_time, &dummy_time, &dummy_time) == 0) {
+                buf_append(&buf, "fd_peer_messages_received_total{peer=\"%s\"} %lld\n", peer_id, psm_total);
+            }
+
+            if (fd_stat_getstats(STAT_P_TOSEND, peer_hdr, &dummy_current, &dummy_limit, &dummy_highest, &tosend_total, &dummy_time, &dummy_time, &dummy_time) == 0) {
+                buf_append(&buf, "fd_peer_messages_sent_total{peer=\"%s\"} %lld\n", peer_id, tosend_total);
+            }
+
+            // Get peer supported applications
+            struct fd_list *app_li;
+            for (app_li = peer_hdr->info.runtime.pir_apps.next; app_li != &peer_hdr->info.runtime.pir_apps; app_li = app_li->next) {
+                struct fd_app *app = (struct fd_app *)app_li;
+                if (app) {
+                    // app->flags.auth = 1 if authentication application, acct = 1 if accounting
+                    // Use a combined value: 1=auth only, 2=acct only, 3=both
+                    int app_type = (app->flags.auth ? 1 : 0) + (app->flags.acct ? 2 : 0);
+                    if (app_type > 0) {
+                        buf_append(&buf, "fd_peer_application_support{peer=\"%s\",appid=\"%u\"} %d\n", peer_id, app->appid, app_type);
+                    }
+                }
+            }
         }
         
         pthread_rwlock_unlock(&fd_g_peers_rw);
