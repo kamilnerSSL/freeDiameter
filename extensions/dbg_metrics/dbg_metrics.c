@@ -20,7 +20,7 @@
 // HTTP Server include
 #include <microhttpd.h>
 
-#define EXPORTER_PORT 9090
+#define EXPORTER_PORT 9102
 #define EXPORTER_ADDR "127.0.0.1"
 
 /* Global configuration */
