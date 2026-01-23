@@ -7,6 +7,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <errno.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
 
 // freeDiameter includes
 #include <freeDiameter/extension.h>
@@ -105,7 +108,74 @@ int map_state_to_int(enum peer_state state) {
     }
 }
 
-/* --- 3. Queue Stats Helper --- */
+/* --- 3. Config File Parser --- */
+static int parse_config(const char *conffile) {
+    FILE *f;
+    char buffer[256];
+    char *line;
+    int ret = 0;
+
+    if (!conffile) {
+        fd_log_debug("[metrics] No configuration file provided, using defaults (port=%d, addr=%s)", metrics_port, metrics_addr);
+        return 0;
+    }
+
+    f = fopen(conffile, "r");
+    if (!f) {
+        fd_log_debug("[metrics] Could not open configuration file '%s': %s", conffile, strerror(errno));
+        return 0;  // Use defaults if file doesn't exist
+    }
+
+    while (fgets(buffer, sizeof(buffer), f)) {
+        line = buffer;
+        
+        // Skip whitespace and comments
+        while (*line && (*line == ' ' || *line == '\t')) line++;
+        if (!*line || *line == '#' || *line == '\n') continue;
+
+        // Parse "port = <number>"
+        if (strncasecmp(line, "port", 4) == 0) {
+            char *val = line + 4;
+            while (*val && (*val == ' ' || *val == '=' || *val == '\t')) val++;
+            unsigned long port_val = strtoul(val, NULL, 10);
+            if (port_val > 0 && port_val <= 65535) {
+                metrics_port = (uint16_t)port_val;
+                fd_log_debug("[metrics] Config: port = %u", metrics_port);
+            } else {
+                fd_log_debug("[metrics] Config: Invalid port value '%s'", val);
+                ret = 1;
+            }
+            continue;
+        }
+
+        // Parse "addr = <address>"
+        if (strncasecmp(line, "addr", 4) == 0 || strncasecmp(line, "address", 7) == 0) {
+            char *val = strchr(line, '=');
+            if (!val) continue;
+            val++;  // Skip '='
+            while (*val && (*val == ' ' || *val == '\t')) val++;  // Skip whitespace
+            
+            // Remove trailing newline/whitespace
+            char *end = val + strlen(val) - 1;
+            while (end > val && (*end == '\n' || *end == '\r' || *end == ' ' || *end == '\t')) end--;
+            *(end + 1) = '\0';
+            
+            metrics_addr = strdup(val);
+            if (!metrics_addr) {
+                fd_log_debug("[metrics] Memory allocation failed for address");
+                ret = 1;
+            } else {
+                fd_log_debug("[metrics] Config: addr = %s", metrics_addr);
+            }
+            continue;
+        }
+    }
+
+    fclose(f);
+    return ret;
+}
+
+/* --- 4. Queue Stats Helper --- */
 void append_queue_metrics(struct resp_buffer *buf, const char *queue_name, 
                           int current, int limit, int highest, long long total) {
     buf_append(buf, "fd_queue_current{queue=\"%s\"} %d\n", queue_name, current);
@@ -114,7 +184,7 @@ void append_queue_metrics(struct resp_buffer *buf, const char *queue_name,
     buf_append(buf, "fd_queue_total{queue=\"%s\"} %lld\n", queue_name, total);
 }
 
-/* --- 4. HTTP Handler --- */
+/* --- 5. HTTP Handler --- */
 static int handle_request(void *cls, struct MHD_Connection *connection,
                           const char *url, const char *method,
                           const char *version, const char *upload_data,
@@ -269,22 +339,39 @@ static int handle_request(void *cls, struct MHD_Connection *connection,
     return mhd_ret;
 }
 
-/* --- 5. Extension Entry Point --- */
+/* --- 6. Extension Entry Point --- */
 static struct MHD_Daemon *http_daemon = NULL;
 
 static int metrics_entry(char * conffile) {
-    
-    fd_log_debug("[metrics] Loading Metrics Extension on port %d...", EXPORTER_PORT);
+    struct sockaddr_in addr;
 
-    http_daemon = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION, EXPORTER_PORT, NULL, NULL, 
-                                   &handle_request, NULL, MHD_OPTION_END);
+    // Parse configuration file
+    if (parse_config(conffile) != 0) {
+        fd_log_debug("[metrics] Configuration parsing had errors but continuing with settings");
+    }
+    
+    fd_log_debug("[metrics] Loading Metrics Extension on %s:%u...", metrics_addr, metrics_port);
+
+    // Setup address binding
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(metrics_port);
+    
+    // Parse the IP address
+    if (inet_pton(AF_INET, metrics_addr, &addr.sin_addr) != 1) {
+        fd_log_debug("[metrics] Invalid IPv4 address '%s', using 127.0.0.1", metrics_addr);
+        inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr);
+    }
+
+    http_daemon = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION, metrics_port, NULL, NULL, 
+                                   &handle_request, NULL, MHD_OPTION_SOCK_ADDR, &addr, MHD_OPTION_END);
 
     if (http_daemon == NULL) {
-        fd_log_debug("[metrics] Failed to start HTTP server.");
+        fd_log_debug("[metrics] Failed to start HTTP server on %s:%u.", metrics_addr, metrics_port);
         return 1;
     }
 
-    fd_log_debug("[metrics] HTTP server started successfully.");
+    fd_log_debug("[metrics] HTTP server started successfully on %s:%u.", metrics_addr, metrics_port);
     return 0;
 }
 
