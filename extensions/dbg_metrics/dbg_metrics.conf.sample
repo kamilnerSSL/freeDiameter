@@ -1,0 +1,17 @@
+# Sample configuration file for dbg_metrics extension
+# freeDiameter Prometheus Metrics Exporter
+#
+# This file is optional. If not provided, the extension will use default values.
+# Default port: 9090
+# Default address: 127.0.0.1
+#
+
+# Port to listen on for HTTP metrics endpoint
+# Valid range: 1-65535
+# Default: 9090
+port = 9090
+
+# IP address to bind to
+# Can be any valid IPv4 address, or use 0.0.0.0 to listen on all interfaces
+# Default: 127.0.0.1
+addr = 127.0.0.1
