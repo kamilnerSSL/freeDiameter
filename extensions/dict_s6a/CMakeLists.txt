@@ -1,0 +1,1 @@
+FD_ADD_EXTENSION(dict_s6a dict_s6a.c)
