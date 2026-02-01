@@ -1,7 +1,7 @@
 %global _build_id_links none
 
 %define autorelease(e:s:pb:n) %{?-p:0.}%{lua:
-    release_number = 1;
+    release_number = 6;
     base_release_number = tonumber(rpm.expand("%{?-b*}%{!?-b:1}"));
     print(release_number + base_release_number - 1);
 }%{?-e:.%{-e*}}%{?-s:.%{-s*}}%{!?-n:%{?dist}}
@@ -28,6 +28,8 @@ BuildRequires:  gnutls-devel
 BuildRequires:  libgcrypt-devel
 BuildRequires:  libidn-devel
 BuildRequires:  lksctp-tools-devel
+BuildRequires:  libmicrohttpd-devel
+BuildRequires:  libxml2-devel
 BuildRequires:  chrpath
 BuildRequires:  systemd-rpm-macros
 
@@ -58,6 +60,10 @@ export CMAKE_SKIP_RPATH=TRUE
     -DINSTALL_INCLUDE_DIR:PATH=include/freeDiameter \
     -DCMAKE_BUILD_TYPE=None \
     -DBUILD_RT_EREG:BOOL=ON \
+    -DBUILD_DICT_LEGACY_XML:BOOL=ON \
+    -DBUILD_DICT_DCCA_3GPP:BOOL=ON \
+    -DBUILD_DICT_S6A:BOOL=ON \
+    -DBUILD_DBG_METRICS:BOOL=ON \
     -Wno-dev
 %cmake_build
 
@@ -134,6 +140,16 @@ install -m 0644 doc/freediameter.conf.sample %{buildroot}%{_sysconfdir}/freeDiam
 %{_libdir}/libfdproto.so
 
 %changelog
+* Sun Feb 1 2026 Keith Milner <kamilner@sslconsult.com> - 1.6.1-6
+- Added DICT_S6A to build
+* Fri Jan 30 2026 Keith Milner <kamilner@sslconsult.com> - 1.6.1-5
+- Added DICT_DCCA_3GPP and DICT_LEGACY_XML to build
+* Thu Jan 22 2026 Keith Milner <kamilner@sslconsult.com> - 1.6.1-4
+- Enhanced dbg_metrics extension with more data and config.
+* Thu Jan 22 2026 Keith Milner <kamilner@sslconsult.com> - 1.6.1-3
+- Enhanced dbg_metrics extension.
+* Thu Jan 22 2026 Keith Milner <kamilner@sslconsult.com> - 1.6.1-2
+- Added dbg_metrics extension.
 * Wed Jan 22 2025 Keith Milner <kamilner@sslconsult.com> - 1.6.1-1
 - Updated to v 1.6.1
 - Added Fixup section to handle nested absolute paths in BUILDROOT.
