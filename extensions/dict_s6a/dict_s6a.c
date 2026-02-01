@@ -554,6 +554,129 @@ int dict_s6a_init(char * conffile)
             PARSE_loc_rules(rules, cmd);
         }
 
+		/* Cancel-Location-Request (CLR) Command - 3GPP TS 29.272 #7.2.7 */
+		{
+			struct dict_object * cmd;
+			struct dict_cmd_data data = {
+				317,                                                        /* Code */
+				"Cancel-Location-Request",                                  /* Name */
+				CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR,     /* Fixed flags */
+				CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE                       /* Fixed flag values */
+			};
+			struct local_rules_definition rules[] =
+			{
+                {  {                      .avp_name = "Session-Id" }, RULE_FIXED_HEAD, -1, 1 },
+                {  {                      .avp_name = "Vendor-Specific-Application-Id" }, RULE_OPTIONAL, -1, 1 },
+                {  {                      .avp_name = "Auth-Session-State" }, RULE_REQUIRED, -1, 1 },
+                {  {                      .avp_name = "Origin-Host" }, RULE_REQUIRED, -1, 1 },
+                {  {                      .avp_name = "Origin-Realm" }, RULE_REQUIRED, -1, 1 },
+                {  {                      .avp_name = "Destination-Host" }, RULE_REQUIRED, -1, 1 },
+                {  {                      .avp_name = "Destination-Realm" }, RULE_REQUIRED, -1, 1 },
+                {  {                      .avp_name = "User-Name" }, RULE_REQUIRED, -1, 1 },
+                {  { .avp_vendor = 10415, .avp_name = "Supported-Features" }, RULE_OPTIONAL, -1, -1 },
+                {  { .avp_vendor = 10415, .avp_name = "Cancellation-Type" }, RULE_REQUIRED, -1, 1 },
+                {  { .avp_vendor = 10415, .avp_name = "CLR-Flags" }, RULE_OPTIONAL, -1, 1 },
+                {  {                      .avp_name = "Proxy-Info" }, RULE_OPTIONAL, -1, -1 },
+                {  {                      .avp_name = "Route-Record" }, RULE_OPTIONAL, -1, -1 },
+			};
+
+			CHECK_dict_new( DICT_COMMAND, &data, s6a, &cmd);
+			PARSE_loc_rules( rules, cmd );
+		}
+
+		/* Cancel-Location-Answer (CLA) Command - 3GPP TS 29.272 #7.2.8 */
+		{
+			struct dict_object * cmd;
+			struct dict_cmd_data data = {
+				317,                                                    /* Code */
+				"Cancel-Location-Answer",                               /* Name */
+				CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR, /* Fixed flags */
+				CMD_FLAG_PROXIABLE                                      /* Fixed flag values */
+			};
+			struct local_rules_definition rules[] =
+			{
+                {  {                      .avp_name = "Session-Id" }, RULE_FIXED_HEAD, -1, 1 },
+                {  {                      .avp_name = "Vendor-Specific-Application-Id" }, RULE_OPTIONAL, -1, 1 },
+                {  { .avp_vendor = 10415, .avp_name = "Supported-Features" }, RULE_OPTIONAL, -1, -1 },
+                {  {                      .avp_name = "Result-Code" }, RULE_OPTIONAL, -1, 1 },
+                {  {                      .avp_name = "Experimental-Result" }, RULE_OPTIONAL, -1, 1 },
+                {  {                      .avp_name = "Auth-Session-State" }, RULE_REQUIRED, -1, 1 },
+                {  {                      .avp_name = "Origin-Host" }, RULE_REQUIRED, -1, 1 },
+                {  {                      .avp_name = "Origin-Realm" }, RULE_REQUIRED, -1, 1 },
+                {  {                      .avp_name = "Failed-AVP" }, RULE_OPTIONAL, -1, -1 },
+                {  {                      .avp_name = "Proxy-Info" }, RULE_OPTIONAL, -1, -1 },
+                {  {                      .avp_name = "Route-Record" }, RULE_OPTIONAL, -1, -1 },
+			};
+
+			CHECK_dict_new( DICT_COMMAND, &data, s6a, &cmd);
+			PARSE_loc_rules( rules, cmd );
+		}
+
+        /* Delete-Subscriber-Data-Request (DSR) Command - 3GPP TS 29.272 #7.2.11 */
+		{
+			struct dict_object * cmd;
+			struct dict_cmd_data data = {
+				320,                                                        /* Code */
+				"Delete-Subscriber-Data-Request",                           /* Name */
+				CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR,     /* Fixed flags */
+				CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE                       /* Fixed flag values */
+			};
+			struct local_rules_definition rules[] =
+			{
+                {  {                      .avp_name = "Session-Id" }, RULE_FIXED_HEAD, -1, 1 },
+                {  {                      .avp_name = "Vendor-Specific-Application-Id" }, RULE_OPTIONAL, -1, 1 },
+                {  {                      .avp_name = "Auth-Session-State" }, RULE_REQUIRED, -1, 1 },
+                {  {                      .avp_name = "Origin-Host" }, RULE_REQUIRED, -1, 1 },
+                {  {                      .avp_name = "Origin-Realm" }, RULE_REQUIRED, -1, 1 },
+                {  {                      .avp_name = "Destination-Host" }, RULE_REQUIRED, -1, 1 },
+                {  {                      .avp_name = "Destination-Realm" }, RULE_REQUIRED, -1, 1 },
+                {  {                      .avp_name = "User-Name" }, RULE_REQUIRED, -1, 1 },
+                {  { .avp_vendor = 10415, .avp_name = "Supported-Features" }, RULE_OPTIONAL, -1, -1 },
+                {  { .avp_vendor = 10415, .avp_name = "DSR-Flags" }, RULE_REQUIRED, -1, 1 },
+                {  { .avp_vendor = 10415, .avp_name = "Trace-Reference" }, RULE_OPTIONAL, -1, 1 },
+                {  { .avp_vendor = 10415, .avp_name = "Trace-Data" }, RULE_OPTIONAL, -1, 1 },
+                {  { .avp_vendor = 10415, .avp_name = "Context-Identifier" }, RULE_OPTIONAL, -1, -1 },
+                {  { .avp_vendor = 10415, .avp_name = "Trace-NE-Type-List" }, RULE_OPTIONAL, -1, 1 },
+                {  { .avp_vendor = 10415, .avp_name = "Trace-Interface-List" }, RULE_OPTIONAL, -1, 1 },
+                {  { .avp_vendor = 10415, .avp_name = "Trace-Event-List" }, RULE_OPTIONAL, -1, 1 },
+                {  { .avp_vendor = 10415, .avp_name = "OMC-Id" }, RULE_OPTIONAL, -1, 1 },
+                {  {                      .avp_name = "Proxy-Info" }, RULE_OPTIONAL, -1, -1 },
+                {  {                      .avp_name = "Route-Record" }, RULE_OPTIONAL, -1, -1 },
+			};
+
+			CHECK_dict_new( DICT_COMMAND, &data, s6a, &cmd);
+			PARSE_loc_rules( rules, cmd );
+		}
+
+		/* Delete-Subscriber-Data-Answer (DSA) Command - 3GPP TS 29.272 #7.2.12 */
+		{
+			struct dict_object * cmd;
+			struct dict_cmd_data data = {
+				320,                                                    /* Code */
+				"Delete-Subscriber-Data-Answer",                        /* Name */
+				CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR, /* Fixed flags */
+				CMD_FLAG_PROXIABLE                                      /* Fixed flag values */
+			};
+			struct local_rules_definition rules[] =
+			{
+                {  {                      .avp_name = "Session-Id" }, RULE_FIXED_HEAD, -1, 1 },
+                {  {                      .avp_name = "Vendor-Specific-Application-Id" }, RULE_OPTIONAL, -1, 1 },
+                {  { .avp_vendor = 10415, .avp_name = "Supported-Features" }, RULE_OPTIONAL, -1, -1 },
+                {  {                      .avp_name = "Result-Code" }, RULE_OPTIONAL, -1, 1 },
+                {  {                      .avp_name = "Experimental-Result" }, RULE_OPTIONAL, -1, 1 },
+                {  {                      .avp_name = "Auth-Session-State" }, RULE_REQUIRED, -1, 1 },
+                {  {                      .avp_name = "Origin-Host" }, RULE_REQUIRED, -1, 1 },
+                {  {                      .avp_name = "Origin-Realm" }, RULE_REQUIRED, -1, 1 },
+                {  { .avp_vendor = 10415, .avp_name = "DSA-Flags" }, RULE_OPTIONAL, -1, 1 },
+                {  {                      .avp_name = "Failed-AVP" }, RULE_OPTIONAL, -1, -1 },
+                {  {                      .avp_name = "Proxy-Info" }, RULE_OPTIONAL, -1, -1 },
+                {  {                      .avp_name = "Route-Record" }, RULE_OPTIONAL, -1, -1 },
+			};
+
+			CHECK_dict_new( DICT_COMMAND, &data, s6a, &cmd);
+			PARSE_loc_rules( rules, cmd );
+		}
+
 		/* Purge-UE-Request (PUR) Command - 3GPP TS 29.272 #7.2.13 */
 		{
 			struct dict_object * cmd;
