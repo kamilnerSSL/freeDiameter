@@ -33,8 +33,13 @@
 
 /* The content of this file follows the same structure as dict_base_proto.c */
 
-#define CHECK_dict_new( _type, _data, _parent, _ref )	\
-	CHECK_FCT(  fd_dict_new( fd_g_config->cnf_dict, (_type), (_data), (_parent), (_ref))  );
+#define CHECK_dict_new( _type, _data, _parent, _ref )                                     \
+    {                                                                                     \
+        int _ret = fd_dict_new(fd_g_config->cnf_dict, (_type), (_data), (_parent), (_ref)); \
+        if (_ret != 0 && _ret != EEXIST) {                                                \
+            CHECK_FCT(_ret);                                                              \
+        }                                                                                 \
+    }
 
 #define CHECK_dict_search( _type, _criteria, _what, _result )	\
 	CHECK_FCT(  fd_dict_search( fd_g_config->cnf_dict, (_type), (_criteria), (_what), (_result), ENOENT) );
@@ -93,7 +98,7 @@ int dict_s6a_init(char * conffile)
         struct dict_object * vendor;
         CHECK_FCT(fd_dict_search(fd_g_config->cnf_dict, DICT_VENDOR, VENDOR_BY_NAME, "3GPP", &vendor, ENOENT));
         struct dict_application_data app_data = { 16777251, "S6A" };
-        CHECK_FCT(fd_dict_new(fd_g_config->cnf_dict, DICT_APPLICATION, &app_data, vendor, &s6a));
+        CHECK_dict_new(DICT_APPLICATION, &app_data, vendor, &s6a);
     }
 
 	/* AVP section */
