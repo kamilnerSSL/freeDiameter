@@ -688,7 +688,7 @@ static int rt_rewrite(void * cbdata, struct msg **msg)
 		return 0;
 	}
 
-	if (pthread_rwlock_wrlock(&rt_rewrite_lock) != 0) {
+	if (pthread_rwlock_rdlock(&rt_rewrite_lock) != 0) {
 		fd_log_error("%s: locking failed, aborting message rewrite", MODULE_NAME);
 		return errno;
 	}
