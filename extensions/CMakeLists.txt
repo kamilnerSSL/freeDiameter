@@ -53,7 +53,7 @@ FD_EXTENSION_SUBDIR(dict_mip6i     "Diameter Mobile IPv6 IKE Dictionary definiti
 FD_EXTENSION_SUBDIR(dict_nas_mipv6 "Diameter NAS-to-HAAA Interaction Dictionary definitions"  ON)
 FD_EXTENSION_SUBDIR(dict_rfc5777   "Classification and QoS (RFC 5777) Dictionary definitions" ON)
 FD_EXTENSION_SUBDIR(dict_s6a   "3GPP S6a Protocol support" ON)
-FD_EXTENSION_SUBDIR(dict_gx    "3GPP Gx Protocol support"  ON)
+FD_EXTENSION_SUBDIR(dict_3gpp_gx    "3GPP Gx Protocol support"  ON)
 
 IF (NOT CMAKE_BUILD_TYPE MATCHES "DebianPackage")
 FD_EXTENSION_SUBDIR(dict_json       "Load Diameter dictionary definitions from JSON files."   OFF)
