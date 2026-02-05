@@ -261,6 +261,10 @@ void dump_config(struct avp_match *start, const char *prefix)
 				char *condition_str = dump_condition(action->condition);
 				fd_log_notice("DROP %s%s", new_prefix, condition_str ? condition_str : "");
 				free(condition_str);
+			} else if (action->match_type == REWRITE_FLAG) {
+				char *condition_str = dump_condition(action->condition);
+				fd_log_notice("FLAG (set:%x clr:%x) %s%s", action->flags_set, action->flags_clear, new_prefix, condition_str ? condition_str : "");
+				free(condition_str);
 			}
 			action = action->next;
 		}
@@ -376,6 +380,8 @@ static struct avp_action *avp_action_new(void) {
 	result->match_type = REWRITE_MAP;
 	result->next = NULL;
 	result->target = NULL;
+	result->flags_set = 0;
+	result->flags_clear = 0;
 	return result;
 }
 
@@ -735,6 +741,30 @@ int drop_finish(void)
 	action->condition = condition_target;
 	action->match_type = REWRITE_DROP;
 	action->target = NULL;;
+	avp_match_add_action(source_target, action);
+
+	source_target = NULL;
+	condition_target = NULL;
+
+	return 0;
+}
+
+/* mark for flag modification */
+int flag_finish(uint8_t set, uint8_t clear)
+{
+	struct avp_action *action;
+
+	if (source_target == NULL) {
+		return 0;
+	}
+
+	if ((action=avp_action_new()) == NULL) {
+		return -1;
+	}
+	action->condition = condition_target;
+	action->match_type = REWRITE_FLAG;
+	action->flags_set = set;
+	action->flags_clear = clear;
 	avp_match_add_action(source_target, action);
 
 	source_target = NULL;
