@@ -2,7 +2,7 @@
 # To find how to have freeDiameter load this extension, please refer to the freeDiameter documentation.
 #
 # The rt_rewrite extension allows moving data from one AVP into
-# another one, adding AVPs, or dropping AVPs altogether.
+# another one, adding AVPs, dropping AVPs altogether, or modifying AVP flags.
 #
 # All of the can be done condionally, depending on the value of an AVP
 # in the message.
@@ -26,6 +26,10 @@
 # For removing AVPs, use DROP:
 #  DROP = "Grouped-AVP1" : "Octetstring-AVP1";
 #
+# For modifying AVP flags, use FLAG:
+#  FLAG = "Grouped-AVP1" : "Octetstring-AVP1" > SET MANDATORY;
+#  FLAG = "Grouped-AVP1" : "Octetstring-AVP1" > CLR VENDOR;
+#
 # For adding AVPs, use ADD. The syntax is slightly different because
 # it is by default conditional on the message type, which is the first
 # string in the ADD configuration:
@@ -42,11 +46,12 @@
 # Multiple variables can be defined this way.
 #
 # then you can prefix the ADD/DROP/MAP commands with IF clauses of the form
-# IF "key" < "10" ADD/MAP/DROP ..
+# IF "key" < "10" ADD/MAP/DROP/FLAG ..
 #
 # For example:
 # IF "key" > "1" MAP = "Source-AVP1" > "Destination-AVP1";
 # IF "key" = "0" DROP = "Grouped-AVP" : "OctetString-AVP";
+# IF "key" < "0" FLAG = "Grouped-AVP" : "OctetString-AVP" > SET MANDATORY;
 # IF "key" >= "1000" ADD = "Grouped-AVP2" : "Octetstring-AVP2" = "some value";
 #
 # Supported comparison operators are "<", "<=", "=", ">=", ">".
