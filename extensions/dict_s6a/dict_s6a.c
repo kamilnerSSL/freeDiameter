@@ -117,6 +117,19 @@ int dict_s6a_init(char * conffile)
         }
 
         {
+            /* AIA-Flags AVP - 3GPP TS 29.272 #7.3.202 */
+            struct dict_avp_data data = {
+                1680,                                   /* Code */
+                10415,                                  /* Vendor */
+                "AIA-Flags",                            /* Name */
+                AVP_FLAG_VENDOR |AVP_FLAG_MANDATORY,    /* Fixed flags */
+                AVP_FLAG_VENDOR,                        /* Fixed flag values */
+                AVP_TYPE_UNSIGNED32                     /* base type of data */
+            };
+            CHECK_dict_new(DICT_AVP, &data, NULL, NULL);
+        }
+
+        {
             /* IDR-Flags AVP - 3GPP TS 29.272 #7.3.103 */
             struct dict_avp_data data = {
                 1490,                                   /* Code */
@@ -486,6 +499,7 @@ int dict_s6a_init(char * conffile)
                 {  { .avp_vendor = 10415, .avp_name = "Error-Diagnostic" }, RULE_OPTIONAL, -1, 1 },
                 {  { .avp_vendor = 10415, .avp_name = "Supported-Features" }, RULE_OPTIONAL, -1, -1 },
                 {  { .avp_vendor = 10415, .avp_name = "Authentication-Info" }, RULE_OPTIONAL, -1, 1 },
+                {  { .avp_vendor = 10415, .avp_name = "AIA-Flags" }, RULE_OPTIONAL, -1, 1 },
                 {  {                      .avp_name = "Failed-AVP" }, RULE_OPTIONAL, -1, -1 },
                 {  {                      .avp_name = "Proxy-Info" }, RULE_OPTIONAL, -1, -1 },
                 {  {                      .avp_name = "Route-Record" }, RULE_OPTIONAL, -1, -1 },
