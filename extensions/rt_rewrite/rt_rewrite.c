@@ -546,6 +546,12 @@ static int replace_avps(struct avp *avp, struct avp_match *subtree, struct store
 						fd_log_debug("%s: dropping AVP '%s'", MODULE_NAME, avp_name);
 						delete = 1;
 					}
+					/* if flags should be changed */
+					if (action->match_type == REWRITE_FLAG && evaluate_condition(action->condition, values)) {
+						fd_log_debug("%s: updating flags for AVP '%s'", MODULE_NAME, avp_name);
+						header->avp_flags |= action->flags_set;
+						header->avp_flags &= ~action->flags_clear;
+					}
 				}
 				/* if grouped, dive down */
 				if (basetype == AVP_TYPE_GROUPED) {

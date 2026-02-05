@@ -42,6 +42,7 @@ void compare_avp_types(struct avp_match *start);
 int condition(const char *name, enum comparators comparator, const char *value);
 int dest_add(const char *name);
 int drop_finish(void);
+int flag_finish(uint8_t set, uint8_t clear);
 void dump_add_config(struct avp_add *start);
 void dump_config(struct avp_match *start, const char *prefix);
 int map_finish(void);

@@ -35,7 +35,7 @@
 /* Parse the configuration file */
 int rt_rewrite_conf_handle(char * conffile);
 
-typedef enum { REWRITE_DROP, REWRITE_MAP } avp_rewrite_type;
+typedef enum { REWRITE_DROP, REWRITE_MAP, REWRITE_FLAG } avp_rewrite_type;
 
 /* start of the list of rt_rewrite entries */
 
@@ -84,6 +84,9 @@ struct avp_action {
 	struct avp_condition *condition;
 	/* for MAP */
         struct avp_target *target;
+	/* for FLAG */
+	uint8_t flags_set;
+	uint8_t flags_clear;
 };
 
 /*
