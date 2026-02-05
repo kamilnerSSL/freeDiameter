@@ -153,6 +153,7 @@ void yyerror (YYLTYPE *ploc, char * conffile, char const *s)
 %token 		SET
 %token 		CLR
 %token 		MANDATORY
+%token 		VENDOR
 %token 		VARIABLE
 
 
@@ -221,6 +222,8 @@ dest_part: 		dest_part ':' QSTRING { if (dest_add($3) < 0) { YYERROR; }; free($3
 /* flag modification */
 flag:			FLAG '=' source_part '>' SET MANDATORY { if (flag_finish(AVP_FLAG_MANDATORY, 0) < 0) { YYERROR; } } ';'
 			| FLAG '=' source_part '>' CLR MANDATORY { if (flag_finish(0, AVP_FLAG_MANDATORY) < 0) { YYERROR; } } ';'
+			| FLAG '=' source_part '>' SET VENDOR { if (flag_finish(AVP_FLAG_VENDOR, 0) < 0) { YYERROR; } } ';'
+			| FLAG '=' source_part '>' CLR VENDOR { if (flag_finish(0, AVP_FLAG_VENDOR) < 0) { YYERROR; } } ';'
 			;
 
 /* variable (value of an AVP) to be used in a condition */
