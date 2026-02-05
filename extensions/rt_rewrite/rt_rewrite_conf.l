@@ -89,6 +89,10 @@ qstring		\"[^\"\n]*\"
 (?i:DROP)	 	{	return DROP;	}
 (?i:IF)		 	{	return IF;	}
 (?i:MAP)	 	{	return MAP;	}
+(?i:FLAG)	 	{	return FLAG;	}
+(?i:SET)	 	{	return SET;	}
+(?i:CLR)	 	{	return CLR;	}
+(?i:MANDATORY)	 	{	return MANDATORY;	}
 (?i:VARIABLE)	 	{	return VARIABLE;	}
 	/* Valid single characters for yyparse */
 [=/:;<>]			{ return yytext[0]; }
