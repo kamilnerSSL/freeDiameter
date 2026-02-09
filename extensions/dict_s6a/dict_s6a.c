@@ -142,6 +142,45 @@ int dict_s6a_init(char * conffile)
             CHECK_dict_new(DICT_AVP, &data, NULL, NULL);
         }
 
+        {
+            /* NOR-Flags AVP - 3GPP TS 29.272 #7.3.49 */
+            struct dict_avp_data data = {
+                1523,                                   /* Code */
+                10415,                                  /* Vendor */
+                "NOR-Flags",                            /* Name */
+                AVP_FLAG_VENDOR |AVP_FLAG_MANDATORY,    /* Fixed flags */
+                AVP_FLAG_VENDOR |AVP_FLAG_MANDATORY,    /* Fixed flag values */
+                AVP_TYPE_UNSIGNED32                     /* base type of data */
+            };
+            CHECK_dict_new(DICT_AVP, &data, NULL, NULL);
+        }
+
+        {
+            /* User-Id AVP - 3GPP TS 29.272 #7.3.50 */
+            struct dict_avp_data data = {
+                1524,                                   /* Code */
+                10415,                                  /* Vendor */
+                "User-Id",                              /* Name */
+                AVP_FLAG_VENDOR |AVP_FLAG_MANDATORY,    /* Fixed flags */
+                AVP_FLAG_VENDOR |AVP_FLAG_MANDATORY,    /* Fixed flag values */
+                AVP_TYPE_OCTETSTRING                    /* base type of data */
+            };
+            CHECK_dict_new(DICT_AVP, &data, NULL, NULL);
+        }
+
+        {
+            /* Alert-Reason AVP - 3GPP TS 29.272 #7.3.83 */
+            struct dict_avp_data data = {
+                1434,                                   /* Code */
+                10415,                                  /* Vendor */
+                "Alert-Reason",                         /* Name */
+                AVP_FLAG_VENDOR |AVP_FLAG_MANDATORY,    /* Fixed flags */
+                AVP_FLAG_VENDOR |AVP_FLAG_MANDATORY,    /* Fixed flag values */
+                AVP_TYPE_UNSIGNED32                     /* base type of data */
+            };
+            CHECK_dict_new(DICT_AVP, &data, NULL, NULL);
+        }
+
 		/* Terminal Information AVP - 3GPP TS 29.272 #7.3.3 */
 		{
 			struct dict_object * avp;
@@ -727,6 +766,127 @@ int dict_s6a_init(char * conffile)
                 {  {                      .avp_name = "Origin-Realm" }, RULE_REQUIRED, -1, 1 },
                 {  { .avp_vendor = 10415, .avp_name = "Error-Diagnostic" }, RULE_OPTIONAL, -1, 1 },
                 {  { .avp_vendor = 10415, .avp_name = "PUA-Flags" }, RULE_OPTIONAL, -1, 1 },
+                {  {                      .avp_name = "Failed-AVP" }, RULE_OPTIONAL, -1, -1 },
+                {  {                      .avp_name = "Proxy-Info" }, RULE_OPTIONAL, -1, -1 },
+                {  {                      .avp_name = "Route-Record" }, RULE_OPTIONAL, -1, -1 },
+			};
+
+			CHECK_dict_new( DICT_COMMAND, &data, s6a, &cmd);
+			PARSE_loc_rules( rules, cmd );
+		}
+
+		/* Reset-Request (RSR) Command - 3GPP TS 29.272 #7.2.15 */
+		{
+			struct dict_object * cmd;
+			struct dict_cmd_data data = {
+				322,                                                        /* Code */
+				"Reset-Request",                                            /* Name */
+				CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR,     /* Fixed flags */
+				CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE                       /* Fixed flag values */
+			};
+			struct local_rules_definition rules[] =
+			{
+                {  {                      .avp_name = "Session-Id" }, RULE_FIXED_HEAD, -1, 1 },
+                {  {                      .avp_name = "Vendor-Specific-Application-Id" }, RULE_OPTIONAL, -1, 1 },
+                {  {                      .avp_name = "Auth-Session-State" }, RULE_REQUIRED, -1, 1 },
+                {  {                      .avp_name = "Origin-Host" }, RULE_REQUIRED, -1, 1 },
+                {  {                      .avp_name = "Origin-Realm" }, RULE_REQUIRED, -1, 1 },
+                {  {                      .avp_name = "Destination-Host" }, RULE_REQUIRED, -1, 1 },
+                {  {                      .avp_name = "Destination-Realm" }, RULE_REQUIRED, -1, 1 },
+                {  { .avp_vendor = 10415, .avp_name = "Supported-Features" }, RULE_OPTIONAL, -1, -1 },
+                {  { .avp_vendor = 10415, .avp_name = "User-Id" }, RULE_OPTIONAL, -1, -1 },
+                {  {                      .avp_name = "Proxy-Info" }, RULE_OPTIONAL, -1, -1 },
+                {  {                      .avp_name = "Route-Record" }, RULE_OPTIONAL, -1, -1 },
+			};
+
+			CHECK_dict_new( DICT_COMMAND, &data, s6a, &cmd);
+			PARSE_loc_rules( rules, cmd );
+		}
+
+		/* Reset-Answer (RSA) Command - 3GPP TS 29.272 #7.2.16 */
+		{
+			struct dict_object * cmd;
+			struct dict_cmd_data data = {
+				322,                                                    /* Code */
+				"Reset-Answer",                                         /* Name */
+				CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR, /* Fixed flags */
+				CMD_FLAG_PROXIABLE                                      /* Fixed flag values */
+			};
+			struct local_rules_definition rules[] =
+			{
+                {  {                      .avp_name = "Session-Id" }, RULE_FIXED_HEAD, -1, 1 },
+                {  {                      .avp_name = "Vendor-Specific-Application-Id" }, RULE_OPTIONAL, -1, 1 },
+                {  { .avp_vendor = 10415, .avp_name = "Supported-Features" }, RULE_OPTIONAL, -1, -1 },
+                {  {                      .avp_name = "Result-Code" }, RULE_OPTIONAL, -1, 1 },
+                {  {                      .avp_name = "Experimental-Result" }, RULE_OPTIONAL, -1, 1 },
+                {  {                      .avp_name = "Auth-Session-State" }, RULE_REQUIRED, -1, 1 },
+                {  {                      .avp_name = "Origin-Host" }, RULE_REQUIRED, -1, 1 },
+                {  {                      .avp_name = "Origin-Realm" }, RULE_REQUIRED, -1, 1 },
+                {  {                      .avp_name = "Failed-AVP" }, RULE_OPTIONAL, -1, -1 },
+                {  {                      .avp_name = "Proxy-Info" }, RULE_OPTIONAL, -1, -1 },
+                {  {                      .avp_name = "Route-Record" }, RULE_OPTIONAL, -1, -1 },
+			};
+
+			CHECK_dict_new( DICT_COMMAND, &data, s6a, &cmd);
+			PARSE_loc_rules( rules, cmd );
+		}
+
+		/* Notify-Request (NOR) Command - 3GPP TS 29.272 #7.2.17 */
+		{
+			struct dict_object * cmd;
+			struct dict_cmd_data data = {
+				323,                                                        /* Code */
+				"Notify-Request",                                           /* Name */
+				CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR,     /* Fixed flags */
+				CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE                       /* Fixed flag values */
+			};
+			struct local_rules_definition rules[] =
+			{
+                {  {                      .avp_name = "Session-Id" }, RULE_FIXED_HEAD, -1, 1 },
+                {  {                      .avp_name = "Vendor-Specific-Application-Id" }, RULE_OPTIONAL, -1, 1 },
+                {  {                      .avp_name = "Auth-Session-State" }, RULE_REQUIRED, -1, 1 },
+                {  {                      .avp_name = "Origin-Host" }, RULE_REQUIRED, -1, 1 },
+                {  {                      .avp_name = "Origin-Realm" }, RULE_REQUIRED, -1, 1 },
+                {  {                      .avp_name = "Destination-Host" }, RULE_OPTIONAL, -1, 1 },
+                {  {                      .avp_name = "Destination-Realm" }, RULE_REQUIRED, -1, 1 },
+                {  {                      .avp_name = "User-Name" }, RULE_REQUIRED, -1, 1 },
+                {  { .avp_vendor = 10415, .avp_name = "Supported-Features" }, RULE_OPTIONAL, -1, -1 },
+                {  { .avp_vendor = 10415, .avp_name = "Terminal-Information" }, RULE_OPTIONAL, -1, 1 },
+                {  {                      .avp_name = "MIP6-Agent-Info" }, RULE_OPTIONAL, -1, 1 },
+                {  { .avp_vendor = 10415, .avp_name = "Visited-Network-Identifier" }, RULE_OPTIONAL, -1, 1 },
+                {  { .avp_vendor = 10415, .avp_name = "Context-Identifier" }, RULE_OPTIONAL, -1, 1 },
+                {  {                      .avp_name = "Service-Selection" }, RULE_OPTIONAL, -1, 1 },
+                {  { .avp_vendor = 10415, .avp_name = "Alert-Reason" }, RULE_OPTIONAL, -1, 1 },
+                {  { .avp_vendor = 10415, .avp_name = "UE-SRVCC-Capability" }, RULE_OPTIONAL, -1, 1 },
+                {  { .avp_vendor = 10415, .avp_name = "NOR-Flags" }, RULE_OPTIONAL, -1, 1 },
+                {  { .avp_vendor = 10415, .avp_name = "Homogeneous-Support-of-IMS-Voice-Over-PS-Sessions" }, RULE_OPTIONAL, -1, 1 },
+                {  {                      .avp_name = "Proxy-Info" }, RULE_OPTIONAL, -1, -1 },
+                {  {                      .avp_name = "Route-Record" }, RULE_OPTIONAL, -1, -1 },
+			};
+
+			CHECK_dict_new( DICT_COMMAND, &data, s6a, &cmd);
+			PARSE_loc_rules( rules, cmd );
+		}
+
+		/* Notify-Answer (NOA) Command - 3GPP TS 29.272 #7.2.18 */
+		{
+			struct dict_object * cmd;
+			struct dict_cmd_data data = {
+				323,                                                    /* Code */
+				"Notify-Answer",                                        /* Name */
+				CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR, /* Fixed flags */
+				CMD_FLAG_PROXIABLE                                      /* Fixed flag values */
+			};
+			struct local_rules_definition rules[] =
+			{
+                {  {                      .avp_name = "Session-Id" }, RULE_FIXED_HEAD, -1, 1 },
+                {  {                      .avp_name = "Vendor-Specific-Application-Id" }, RULE_OPTIONAL, -1, 1 },
+                {  {                      .avp_name = "Result-Code" }, RULE_OPTIONAL, -1, 1 },
+                {  {                      .avp_name = "Experimental-Result" }, RULE_OPTIONAL, -1, 1 },
+                {  {                      .avp_name = "Auth-Session-State" }, RULE_REQUIRED, -1, 1 },
+                {  {                      .avp_name = "Origin-Host" }, RULE_REQUIRED, -1, 1 },
+                {  {                      .avp_name = "Origin-Realm" }, RULE_REQUIRED, -1, 1 },
+                {  { .avp_vendor = 10415, .avp_name = "Supported-Features" }, RULE_OPTIONAL, -1, -1 },
                 {  {                      .avp_name = "Failed-AVP" }, RULE_OPTIONAL, -1, -1 },
                 {  {                      .avp_name = "Proxy-Info" }, RULE_OPTIONAL, -1, -1 },
                 {  {                      .avp_name = "Route-Record" }, RULE_OPTIONAL, -1, -1 },
