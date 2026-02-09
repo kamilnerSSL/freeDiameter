@@ -1,7 +1,7 @@
 %global _build_id_links none
 
 %define autorelease(e:s:pb:n) %{?-p:0.}%{lua:
-    release_number = 8;
+    release_number = 9;
     base_release_number = tonumber(rpm.expand("%{?-b*}%{!?-b:1}"));
     print(release_number + base_release_number - 1);
 }%{?-e:.%{-e*}}%{?-s:.%{-s*}}%{!?-n:%{?dist}}
@@ -140,6 +140,8 @@ install -m 0644 doc/freediameter.conf.sample %{buildroot}%{_sysconfdir}/freeDiam
 %{_libdir}/libfdproto.so
 
 %changelog
+* Mon Feb 9 2026 Keith Milner <kamilner@sslconsult.com> - 1.6.1-9
+- Enhancements to s6a and Gx dicts
 * Thu Feb 5 2026 Keith Milner <kamilner@sslconsult.com> - 1.6.1-8
 - Enhancements to rt_rewrite to support rewriting flags
 * Wed Feb 4 2026 Keith Milner <kamilner@sslconsult.com> - 1.6.1-7
