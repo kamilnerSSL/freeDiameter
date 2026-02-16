@@ -160,11 +160,12 @@ static int parse_config(const char *conffile) {
             while (end > val && (*end == '\n' || *end == '\r' || *end == ' ' || *end == '\t')) end--;
             *(end + 1) = '\0';
             
-            metrics_addr = strdup(val);
-            if (!metrics_addr) {
+            char *tmp_addr = strdup(val);
+            if (!tmp_addr) {
                 fd_log_debug("[metrics] Memory allocation failed for address");
                 ret = 1;
             } else {
+                metrics_addr = tmp_addr;
                 fd_log_debug("[metrics] Config: addr = %s", metrics_addr);
             }
             continue;
@@ -191,7 +192,12 @@ static int handle_request(void *cls, struct MHD_Connection *connection,
                           size_t *upload_data_size, void **con_cls) {
 
     if (strcmp(method, "GET") != 0) {
-        return MHD_NO;
+        struct MHD_Response *response;
+        const char *msg = "Method Not Allowed";
+        response = MHD_create_response_from_buffer(strlen(msg), (void *)msg, MHD_RESPMEM_PERSISTENT);
+        int ret = MHD_queue_response(connection, MHD_HTTP_METHOD_NOT_ALLOWED, response);
+        MHD_destroy_response(response);
+        return ret;
     }
 
     // Health check endpoint
