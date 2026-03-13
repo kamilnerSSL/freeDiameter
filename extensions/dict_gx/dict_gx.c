@@ -195,7 +195,7 @@ static int dict_gx_init(char * conffile)
         struct dict_cmd_data data = {
             272,
             "Credit-Control-Answer",
-            CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE,
+            CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR,
             CMD_FLAG_PROXIABLE
         };
         struct local_rules_definition rules[] = {
@@ -282,8 +282,7 @@ static int dict_gx_init(char * conffile)
             { { .avp_vendor = 10415, .avp_name = "PRA-Install" }, RULE_OPTIONAL, -1, 1 },
             { { .avp_vendor = 10415, .avp_name = "PRA-Remove" }, RULE_OPTIONAL, -1, 1 },
             { { .avp_vendor = 0, .avp_name = "Proxy-Info" }, RULE_OPTIONAL, -1, -1 },
-            { { .avp_vendor = 0, .avp_name = "Route-Record" }, RULE_OPTIONAL, -1, -1 },
-            { { .avp_vendor = 0, .avp_name = "AVP" }, RULE_OPTIONAL, -1, -1 }
+            { { .avp_vendor = 0, .avp_name = "Route-Record" }, RULE_OPTIONAL, -1, -1 }
         };
         CHECK_dict_new(DICT_COMMAND, &data, gx, &cmd);
         PARSE_loc_rules(rules, cmd);
@@ -294,7 +293,7 @@ static int dict_gx_init(char * conffile)
         struct dict_cmd_data data = {
             258,
             "Re-Auth-Answer",
-            CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE,
+            CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR,
             CMD_FLAG_PROXIABLE
         };
         struct local_rules_definition rules[] = {
@@ -324,8 +323,7 @@ static int dict_gx_init(char * conffile)
             { { .avp_vendor = 0, .avp_name = "Error-Message" }, RULE_OPTIONAL, -1, 1 },
             { { .avp_vendor = 0, .avp_name = "Error-Reporting-Host" }, RULE_OPTIONAL, -1, 1 },
             { { .avp_vendor = 0, .avp_name = "Failed-AVP" }, RULE_OPTIONAL, -1, 1 },
-            { { .avp_vendor = 0, .avp_name = "Proxy-Info" }, RULE_OPTIONAL, -1, -1 },
-            { { .avp_vendor = 0, .avp_name = "AVP" }, RULE_OPTIONAL, -1, -1 }
+            { { .avp_vendor = 0, .avp_name = "Proxy-Info" }, RULE_OPTIONAL, -1, -1 }
         };
         CHECK_dict_new(DICT_COMMAND, &data, gx, &cmd);
         PARSE_loc_rules(rules, cmd);

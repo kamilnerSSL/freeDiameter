@@ -53,7 +53,8 @@ FD_EXTENSION_SUBDIR(dict_mip6i     "Diameter Mobile IPv6 IKE Dictionary definiti
 FD_EXTENSION_SUBDIR(dict_nas_mipv6 "Diameter NAS-to-HAAA Interaction Dictionary definitions"  ON)
 FD_EXTENSION_SUBDIR(dict_rfc5777   "Classification and QoS (RFC 5777) Dictionary definitions" ON)
 FD_EXTENSION_SUBDIR(dict_s6a   "3GPP S6a Protocol support" ON)
-FD_EXTENSION_SUBDIR(dict_3gpp_gx    "3GPP Gx Protocol support"  ON)
+FD_EXTENSION_SUBDIR(dict_gx    "3GPP Gx Protocol support"  ON)
+FD_EXTENSION_SUBDIR(dict_cxdx  "3GPP CxDx Protocol support" ON)
 
 IF (NOT CMAKE_BUILD_TYPE MATCHES "DebianPackage")
 FD_EXTENSION_SUBDIR(dict_json       "Load Diameter dictionary definitions from JSON files."   OFF)
@@ -102,7 +103,7 @@ FD_EXTENSION_SUBDIR(dbg_monitor     "Outputs periodical status information"     
 FD_EXTENSION_SUBDIR(dbg_msg_timings "Show some timing information for messages"      ON)
 FD_EXTENSION_SUBDIR(dbg_msg_dumps   "Show human-readable content of the received & sent messages"      ON)
 FD_EXTENSION_SUBDIR(dbg_rt          "Routing extension for debugging the routing module" ON)
-FD_EXTENSION_SUBDIR(dbg_metrics     "Prometheus metrics exporter for Diameter peer state"      ON)
+FD_EXTENSION_SUBDIR(dbg_metrics     "Prometheus metrics exporter for Diameter peer state"      OFF)
 FD_EXTENSION_SUBDIR(test_app        "Testing application to send dummy message to another peer, like a Diameter 'ping'" OFF)
 FD_EXTENSION_SUBDIR(test_as     "Receive Abort-Session-Requests and display the data" OFF)
 FD_EXTENSION_SUBDIR(test_cc     "Receive Credit-Control-Requests and display the data" ON)
