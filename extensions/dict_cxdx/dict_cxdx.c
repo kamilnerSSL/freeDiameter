@@ -240,7 +240,7 @@ int cxdx_dict_init(char * conffile)
 	  VENDOR_3GPP_Id,			/* Vendor */
 	  "Feature-List", 		        /* Name */
 	  AVP_FLAG_VENDOR | AVP_FLAG_MANDATORY, /* Fixed flags */
-	  AVP_FLAG_MANDATORY,		 	/* Fixed flag values */
+	  AVP_FLAG_VENDOR,		 	/* Fixed flag values */
 	  AVP_TYPE_UNSIGNED32 			/* base type of data */
 	};
       CHECK_dict_new( DICT_AVP, &data , NULL, NULL);
