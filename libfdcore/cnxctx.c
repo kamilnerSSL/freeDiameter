@@ -39,6 +39,8 @@
 #include <net/if.h>
 #include <ifaddrs.h> /* for getifaddrs */
 #include <sys/uio.h> /* writev */
+#include <sys/time.h>   /* for struct timeval, gettimeofday */
+#include <unistd.h>     /* …other includes… */
 
 /* The maximum size of Diameter message we accept to receive (<= 2^24) to avoid too big mallocs in case of trashed headers */
 #ifndef DIAMETER_MSG_SIZE_MAX
@@ -227,57 +229,65 @@ struct cnxctx * fd_cnx_serv_accept(struct cnxctx * serv)
 	TRACE_ENTRY("%p", serv);
 	CHECK_PARAMS_DO(serv, return NULL);
 
-	/* Accept the new connection -- this is blocking until new client enters or until cancellation */
-	CHECK_SYS_DO( cli_sock = accept(serv->cc_socket, (sSA *)&ss, &ss_len), return NULL );
+	while (1) {
+		/* Accept the new connection -- this is blocking until new client enters or until cancellation */
+		CHECK_SYS_DO( cli_sock = accept(serv->cc_socket, (sSA *)&ss, &ss_len), return NULL );
 
-	CHECK_MALLOC_DO( cli = fd_cnx_init(1), { shutdown(cli_sock, SHUT_RDWR); close(cli_sock); return NULL; } );
-	cli->cc_socket = cli_sock;
-	cli->cc_family = serv->cc_family;
-	cli->cc_proto = serv->cc_proto;
+		CHECK_MALLOC_DO( cli = fd_cnx_init(1), { shutdown(cli_sock, SHUT_RDWR); close(cli_sock); return NULL; } );
+		cli->cc_socket = cli_sock;
+		cli->cc_family = serv->cc_family;
+		cli->cc_proto = serv->cc_proto;
 
-	/* Set the timeout */
-	fd_cnx_s_setto(cli->cc_socket);
+		/* Set the timeout */
+		fd_cnx_s_setto(cli->cc_socket);
 
-	/* Generate the name for the connection object */
-	{
-		char addrbuf[INET6_ADDRSTRLEN];
-		char portbuf[10];
-		int  rc;
+		/* Generate the name for the connection object */
+		{
+			char addrbuf[INET6_ADDRSTRLEN];
+			char portbuf[10];
+			int  rc;
 
-		rc = getnameinfo((sSA *)&ss, ss_len, addrbuf, sizeof(addrbuf), portbuf, sizeof(portbuf), NI_NUMERICHOST | NI_NUMERICSERV);
-		if (rc) {
-			snprintf(addrbuf, sizeof(addrbuf), "[err:%s]", gai_strerror(rc));
-			portbuf[0] = '\0';
+			rc = getnameinfo((sSA *)&ss, ss_len, addrbuf, sizeof(addrbuf), portbuf, sizeof(portbuf), NI_NUMERICHOST | NI_NUMERICSERV);
+			if (rc) {
+				snprintf(addrbuf, sizeof(addrbuf), "[err:%s]", gai_strerror(rc));
+				portbuf[0] = '\0';
+			}
+
+			/* Numeric values for debug... */
+			snprintf(cli->cc_id, sizeof(cli->cc_id), CC_ID_HDR "%s from [%s]:%s (%d<-%d)",
+					IPPROTO_NAME(cli->cc_proto), addrbuf, portbuf, serv->cc_socket, cli->cc_socket);
+
+
+			/* ...Name for log messages */
+			rc = getnameinfo((sSA *)&ss, ss_len, cli->cc_remid, sizeof(cli->cc_remid), NULL, 0, 0);
+			if (rc)
+				snprintf(cli->cc_remid, sizeof(cli->cc_remid), "[err:%s]", gai_strerror(rc));
 		}
 
-		/* Numeric values for debug... */
-		snprintf(cli->cc_id, sizeof(cli->cc_id), CC_ID_HDR "%s from [%s]:%s (%d<-%d)",
-				IPPROTO_NAME(cli->cc_proto), addrbuf, portbuf, serv->cc_socket, cli->cc_socket);
-
-
-		/* ...Name for log messages */
-		rc = getnameinfo((sSA *)&ss, ss_len, cli->cc_remid, sizeof(cli->cc_remid), NULL, 0, 0);
-		if (rc)
-			snprintf(cli->cc_remid, sizeof(cli->cc_remid), "[err:%s]", gai_strerror(rc));
-	}
-
-	LOG_D("Incoming connection: '%s' <- '%s'   {%s}", fd_cnx_getid(serv), cli->cc_remid, cli->cc_id);
+		LOG_D("Incoming connection: '%s' <- '%s'   {%s}", fd_cnx_getid(serv), cli->cc_remid, cli->cc_id);
 
 #ifndef DISABLE_SCTP
-	/* SCTP-specific handlings */
-	if (cli->cc_proto == IPPROTO_SCTP) {
-		/* Retrieve the number of streams */
-		CHECK_FCT_DO( fd_sctp_get_str_info( cli->cc_socket, &cli->cc_sctp_para.str_in, &cli->cc_sctp_para.str_out, NULL ), {fd_cnx_destroy(cli); return NULL;} );
-		if (cli->cc_sctp_para.str_out < cli->cc_sctp_para.str_in)
-			cli->cc_sctp_para.pairs = cli->cc_sctp_para.str_out;
-		else
-			cli->cc_sctp_para.pairs = cli->cc_sctp_para.str_in;
+		/* SCTP-specific handlings */
+		if (cli->cc_proto == IPPROTO_SCTP) {
+			/* Retrieve the number of streams */
+			int ret = fd_sctp_get_str_info( cli->cc_socket, &cli->cc_sctp_para.str_in, &cli->cc_sctp_para.str_out, NULL );
+			if (ret != 0) {
+				LOG_E("SCTP: Failed to retrieve stream information for new connection from %s: %s", cli->cc_remid, strerror(ret));
+				fd_cnx_destroy(cli);
+				cli = NULL;
+				continue; /* Loop to accept next connection */
+			}
+			if (cli->cc_sctp_para.str_out < cli->cc_sctp_para.str_in)
+				cli->cc_sctp_para.pairs = cli->cc_sctp_para.str_out;
+			else
+				cli->cc_sctp_para.pairs = cli->cc_sctp_para.str_in;
 
-		LOG_A( "%s : client '%s' (SCTP:%d, %d/%d streams)", fd_cnx_getid(serv), fd_cnx_getid(cli), cli->cc_socket, cli->cc_sctp_para.str_in, cli->cc_sctp_para.str_out);
-	}
+			LOG_A( "%s : client '%s' (SCTP:%d, %d/%d streams)", fd_cnx_getid(serv), fd_cnx_getid(cli), cli->cc_socket, cli->cc_sctp_para.str_in, cli->cc_sctp_para.str_out);
+		}
 #endif /* DISABLE_SCTP */
 
-	return cli;
+		return cli;
+	}
 }
 
 /* Client side: connect to a remote server -- cancelable */

@@ -243,6 +243,8 @@ static int compare_match(char * str, size_t len, struct match_data * md, int * r
 	/* Plain strings: we compare with strncasecmp */
 	if (md->is_regex == 0) {
 		*res = strncasecmp(str, md->plain, len);
+		if (*res == 0 && md->plain[len] != '\0')
+			*res = 1;
 		return 0;
 	}
 
@@ -255,7 +257,7 @@ static int compare_match(char * str, size_t len, struct match_data * md, int * r
 		memset(pmatch, 0, sizeof(pmatch));
 		pmatch[0].rm_so = 0;
 		pmatch[0].rm_eo = len;
-		err = regexec(&md->preg, str, 0, pmatch, REG_STARTEND);
+		err = regexec(&md->preg, str, 1, pmatch, REG_STARTEND);
 	}
 #else /* HAVE_REG_STARTEND */
 	{
