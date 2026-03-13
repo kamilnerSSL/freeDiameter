@@ -1,7 +1,7 @@
 %global _build_id_links none
 
 %define autorelease(e:s:pb:n) %{?-p:0.}%{lua:
-    release_number = 13
+    release_number = 14
     base_release_number = tonumber(rpm.expand("%{?-b*}%{!?-b:1}"));
     print(release_number + base_release_number - 1);
 }%{?-e:.%{-e*}}%{?-s:.%{-s*}}%{!?-n:%{?dist}}
@@ -142,6 +142,9 @@ install -m 0644 doc/freediameter.conf.sample %{buildroot}%{_sysconfdir}/freeDiam
 %{_libdir}/libfdproto.so
 
 %changelog
+* Fri Mar 13 2026 Keith Milner <kamilner@sslconsult.com> - 1.6.1-14
+- Fixes to dict_gx
+- Merged in https://github.com/freeDiameter/freeDiameter/pull/78
 * Fri Mar 13 2026 Keith Milner <kamilner@sslconsult.com> - 1.6.1-13
 - Merged feature-3gpp-dicts: completed dict_cxdx with full 3GPP TS 29.229 command
   set (UAR/UAA, MAR/MAA, SAR/SAA, LIR/LIA, RTR/RTA, PPR/PPA); resolved conflicts
