@@ -217,34 +217,13 @@ int cxdx_dict_init(char * conffile)
     }
 
 
-    /* Feature-List-ID */
-    {
-      struct dict_avp_data data = 
-	{ 
-	  629, 					/* Code */
-	  VENDOR_3GPP_Id,			/* Vendor */
-	  "Feature-List-ID", 		        /* Name */
-	  AVP_FLAG_VENDOR,                      /* Fixed flags */
-	  AVP_FLAG_VENDOR,	                /* Fixed flag values */
-	  AVP_TYPE_UNSIGNED32 			/* base type of data */
-	};
-      CHECK_dict_new( DICT_AVP, &data , NULL, NULL);
-    }
-
-
-    /* Feature-List */
-    {
-      struct dict_avp_data data = 
-	{ 
-	  630, 					/* Code */
-	  VENDOR_3GPP_Id,			/* Vendor */
-	  "Feature-List", 		        /* Name */
-	  AVP_FLAG_VENDOR | AVP_FLAG_MANDATORY, /* Fixed flags */
-	  AVP_FLAG_VENDOR,		 	/* Fixed flag values */
-	  AVP_TYPE_UNSIGNED32 			/* base type of data */
-	};
-      CHECK_dict_new( DICT_AVP, &data , NULL, NULL);
-    }
+    /* Feature-List-ID (629) and Feature-List (630) are defined by dict_dcca_3gpp */
+    /* User-Authorization-Type (623) is also defined by dict_dcca_3gpp */
+    /* SIP AVPs 606-626 (User-Data, SIP-Auth-Data-Item, Server-Assignment-Type, */
+    /* Deregistration-Reason, Charging-Information, etc.) are in dict_dcca_3gpp  */
+    /* UAR-Flags (637), LIA-Flags (653), Associated-Identities (632),            */
+    /* Wildcarded-Public-Identity (634), Wildcarded-IMPU (636) are in            */
+    /* dict_dcca_3gpp as well.                                                    */
 
     /* Server-Capabilities */
     {
@@ -272,42 +251,22 @@ int cxdx_dict_init(char * conffile)
 
 
 
-    /* User-Authorization-Type */
-    {
-      struct dict_avp_data data = 
-	{ 
-	  623, 					/* Code */
-	  VENDOR_3GPP_Id, 			/* Vendor */
-	  "User-Authorization-Type", 		/* Name */
-	  AVP_FLAG_MANDATORY | AVP_FLAG_VENDOR, /* Fixed flags */
-	  AVP_FLAG_MANDATORY | AVP_FLAG_VENDOR,	/* Fixed flag values */
-	  AVP_TYPE_INTEGER32 			/* base type of data */
-	};
-      CHECK_dict_new( DICT_AVP, &data , NULL, NULL);
-    }
+    /* User-Authorization-Type (623) defined by dict_dcca_3gpp */
 
 
-    /* Supported-Features */
+    /* Supported-Features (628) is defined by dict_dcca_3gpp; add Cx/Dx rules here */
     {
       struct dict_object * avp;
-      struct dict_avp_data data = 
-	{ 
-	  628, 					/* Code */
-	  VENDOR_3GPP_Id,			/* Vendor */
-	  "Supported-Features", 		/* Name */
-	  AVP_FLAG_VENDOR | AVP_FLAG_MANDATORY, /* Fixed flags */
-	  AVP_FLAG_MANDATORY,		 	/* Fixed flag values */
-	  AVP_TYPE_GROUPED 			/* base type of data */
-	};
-
-      struct local_rules_definition rules[] = 
-	{ 
+      struct local_rules_definition rules[] =
+	{
 	  {  "Vendor-Id", 	 RULE_REQUIRED, -1, 1 },
 	  {  "Feature-List-ID",  RULE_REQUIRED, -1, 1 },
 	  {  "Feature-List", 	 RULE_REQUIRED, -1, 1 }
 	};
 
-      CHECK_dict_new (DICT_AVP, &data , NULL, &avp);
+      CHECK_FCT( fd_dict_search( fd_g_config->cnf_dict, DICT_AVP, AVP_BY_NAME_AND_VENDOR,
+                 & (struct dict_avp_request){ .avp_vendor = VENDOR_3GPP_Id, .avp_name = "Supported-Features" },
+                 &avp, ENOENT) );
       PARSE_loc_rules(rules, avp, AVP_BY_NAME_ALL_VENDORS );
     }
   
@@ -608,1123 +567,315 @@ int cxdx_dict_init(char * conffile)
 
 
 
-#if 0   /* TODO - NRGJ :   alterar conforme RFC-3GPP : */
-		
-    /* Multimedia-Auth-Request (MAR) Command */
-    {
-      /*		
-			The Multimedia-Auth-Request (MAR) command is indicated by the
-			Command-Code set to 286 and the Command Flags' 'R' bit set.  The
-			Diameter client in a SIP server sends this command to the Diameter
-			server to request that the Diameter server authenticate and authorize
-			a user attempt to use some SIP service (in this context, SIP service
-			can be something as simple as a SIP subscription or using the proxy
-			services for a SIP request).
+/* Commands defined in 3GPP TS 29.229 (Cx/Dx interface) */
 
-			The MAR command may also register the SIP server's own URI to the
-			Diameter server, so that future LIR/LIA messages can return this URI.
-			If the SIP server is acting as a SIP registrar (see examples in
-			Sections 6.2 and 6.3), its Diameter client MUST include a SIP-
-			Server-URI AVP in the MAR command.  In any other cases (see example
-			in Section 6.4), its Diameter client MUST NOT include a SIP-Server-
-			URI AVP in the MAR command.
-
-			The SIP-Method AVP MUST include the SIP method name of the SIP
-			request that triggered this Diameter MAR message.  The Diameter
-			server can use this AVP to authorize some SIP requests depending on
-			the method.
-
-			The Diameter MAR message MUST include a SIP-AOR AVP.  The SIP-AOR AVP
-			indicates the target of the SIP request.  The value of the AVP is
-			extracted from different places in SIP request, depending on the
-			semantics of the SIP request.  For SIP REGISTER messages the SIP-AOR
-			AVP value indicates the intended public user identity under
-			registration, and it is the SIP or SIPS URI populated in the To
-			header field value (addr-spec as per RFC 3261 [RFC3261]) of the SIP
-			REGISTER request.  For other types of SIP requests, such as INVITE,
-			SUBSCRIBE, MESSAGE, etc., the SIP-AOR AVP value indicates the
-			intended destination of the request.  This is typically populated in
-			the Request-URI of the SIP request.  Extracting the SIP-AOR AVP value
-			from the proper SIP header field is the Diameter client's
-			responsibility.  Extensions to SIP (new SIP methods or new semantics)
-			may require the SIP-AOR to be extracted from other parts of the
-			request.
-
-			If the SIP request includes some sort of authentication information,
-			the Diameter client MUST include the user name, extracted from the
-			authentication information of the SIP request, in the User-Name AVP
-			value.
-
-			The Message Format of the MAR command is as follows:
-
-			<MAR> ::= < Diameter Header: 286, REQ, PXY >
-			< Session-Id >
-			{ Auth-Application-Id }
-			{ Auth-Session-State }
-			{ Origin-Host }
-			{ Origin-Realm }
-			{ Destination-Realm }
-			{ SIP-AOR }
-			{ SIP-Method }
-			[ Destination-Host ]
-			[ User-Name ]
-			[ SIP-Server-URI ]
-			[ SIP-Number-Auth-Items ]
-			[ SIP-Auth-Data-Item ]
-			* [ Proxy-Info ]
-			* [ Route-Record ]
-			* [ AVP ]
-
-			*/
+    /*
+     * <MAR> ::= < Diameter Header: 303, REQ, PXY, 16777216 >
+       *           < Session-Id >
+       *           { Vendor-Specific-Application-Id }
+       *           { Auth-Session-State }
+       *           { Origin-Host }
+       *           { Origin-Realm }
+       *           { Destination-Realm }
+       *           { User-Name }
+       *           { Public-Identity }
+       *           { SIP-Auth-Data-Item }
+       *           { SIP-Number-Auth-Items }
+       *           { Server-Name }
+       *           [ Destination-Host ]
+       *         * [ Supported-Features ]
+       *         * [ Proxy-Info ]
+       *         * [ Route-Record ]
+       */
 
       struct dict_object * cmd;
-      struct dict_cmd_data data = 
-	{ 
-	  303, 				/* Code */
-	  "Multimedia-Auth-Request", 	/* Name */
-	  CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR, 	/* Fixed flags */
-	  CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE 			/* Fixed flag values */
-	};
 
-      struct local_rules_definition rules[] = 
-	{ 	 {  "Session-Id", 		RULE_FIXED_HEAD, -1, 1 }
-		 ,{  "Auth-Application-Id", 	RULE_REQUIRED,   -1, 1 }
-		 ,{  "Auth-Session-State", 	RULE_REQUIRED,   -1, 1 }
-		 ,{  "Origin-Host", 		RULE_REQUIRED,   -1, 1 }
-		 ,{  "Origin-Realm", 		RULE_REQUIRED,   -1, 1 }
-		 ,{  "Destination-Realm",	RULE_REQUIRED,   -1, 1 }
-		 ,{  "SIP-AOR", 		RULE_REQUIRED,   -1, 1 }
-		 ,{  "SIP-Method", 		RULE_REQUIRED,   -1, 1 }
-		 ,{  "Destination-Host", 	RULE_OPTIONAL,   -1, 1 }
-		 ,{  "User-Name", 		RULE_OPTIONAL,   -1, 1 }
-		 ,{  "SIP-Server-URI", 		RULE_OPTIONAL,   -1, 1 }
-		 ,{  "SIP-Number-Auth-Items", 	RULE_OPTIONAL,   -1, 1 }
-		 ,{  "SIP-Auth-Data-Item", 	RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Proxy-Info", 		RULE_OPTIONAL,   -1, -1 }
-		 ,{  "Route-Record", 		RULE_OPTIONAL,   -1, -1 }
-
-	};
-			
-      CHECK_dict_new( DICT_COMMAND, &data , cxdx_dict, &cmd);
-      PARSE_loc_rules( rules, cmd, AVP_BY_NAME );
-    }
-    /* Multimedia-Auth-Answer (MAA) Command */
-    {
-      /*
-			
-	The Multimedia-Auth-Answer (MAA) is indicated by the Command-Code set
-	to 286 and the Command Flags' 'R' bit cleared.  The Diameter server
-	sends this command in response to a previously received Diameter
-	Multimedia-Auth-Request (MAR) command.
-
-	In addition to the values already defined in RFC 3588 [RFC3588], the
-	Result-Code AVP may contain one of the values defined in
-	Section 10.1.
-
-	If the Diameter server requires a User-Name AVP value to process the
-	Diameter MAR request, but the Diameter MAR message did not contain a
-	User-Name AVP value, the Diameter server MUST set the Result-Code AVP
-	value to DIAMETER_USER_NAME_REQUIRED (see Section 10.1.2) and return
-	it in a Diameter MAA message.  The Diameter server MAY include a
-	SIP-Number-Auth-Items AVP and one or more SIP-Auth-Data-Item AVPs
-	with authentication information (e.g., a challenge).  Upon reception
-	of this Diameter MAA message with the Result-Code AVP value set to
-	DIAMETER_USER_NAME_REQUIRED, the SIP server typically requests
-	authentication by generating a SIP 401 (Unauthorized) or SIP 407
-	(Proxy Authentication Required) response back to the originator.
-
-	If the User-Name AVP is present in the Diameter MAR message, the
-	Diameter server MUST verify the existence of the user in the realm,
-	i.e., the User-Name AVP value is a valid user within that realm.  If
-	the Diameter server does not recognize the user name received in the
-	User-Name AVP, the Diameter server MUST build a Diameter
-	Multimedia-Auth-Answer (MAA) message and MUST set the Result-Code AVP
-	to DIAMETER_ERROR_USER_UNKNOWN.
-
-	If the SIP-Methods AVP value of the Diameter MAR message is set to
-	REGISTER and a User-Name AVP is present, then the Diameter server
-	MUST authorize that User-Name AVP value is able to use the URI
-	included in the SIP-AOR AVP.  If this authorization fails, the
-	Diameter server must set the Result-Code AVP to
-	DIAMETER_ERROR_IDENTITIES_DONT_MATCH and send it in a Diameter
-	Multimedia-Auth-Answer (MAA) message.
-
-	Note: Correlation between User-Name and SIP-AOR AVP values is only
-	required for SIP REGISTER request, to prevent a user from
-	registering a SIP-AOR allocated to another user.  In other types
-	of SIP requests (e.g., INVITE), the SIP-AOR indicates the intended
-	destination of the request, rather than the originator of it.
-
-	The Diameter server MUST verify whether the authentication scheme
-	(SIP-Authentication-Scheme AVP value) indicated in the grouped
-	SIP-Auth-Data-Item AVP is supported or not.  If that authentication
-	scheme is not supported, then the Diameter server MUST set the
-	Result-Code AVP to DIAMETER_ERROR_AUTH_SCHEME_NOT_SUPPORTED and send
-	it in a Diameter Multimedia-Auth-Answer (MAA) message.
-
-	If the SIP-Number-Auth-Items AVP is present in the Diameter MAR
-	message, it indicates the number of authentication data items that
-	the Diameter client is requesting.  It is RECOMMENDED that the
-	Diameter server, when building the Diameter MAA message, includes a
-	number of SIP-Auth-Data-Item AVPs that are a subset of the
-	authentication data items requested by the Diameter client in the
-	SIP-Number-Auth-Items AVP value of the Diameter MAR message.
-
-	If the SIP-Server-URI AVP is present in the Diameter MAR message,
-	then the Diameter server MUST compare the stored SIP server (assigned
-	to the user) with the SIP-Server-URI AVP value (received in the
-	Diameter MAR message).  If they don't match, the Diameter server MUST
-	temporarily save the newly received SIP server assigned to the user,
-	and MUST set an "authentication pending" flag for the user.  If they
-	match, the Diameter server shall clear the "authentication pending"
-	flag for the user.
-
-	In any other situation, if there is a success in processing the
-	Diameter MAR command and the Diameter server stored the
-	SIP-Server-URI, the Diameter server MUST set the Result-Code AVP
-	value to DIAMETER_SUCCESS and return it in a Diameter MAA message.
-
-	If there is a success in processing the Diameter MAR command, but the
-	Diameter server does not store the SIP-Server-URI because the AVP was
-	not present in the Diameter MAR command, then the Diameter server
-	MUST set the Result-Code AVP value to either:
-
-	1.  DIAMETER_SUCCESS_AUTH_SENT_SERVER_NOT_STORED, if the Diameter
-	server is sending authentication credentials to create a
-	challenge.
-
-	2.  DIAMETER_SUCCESS_SERVER_NAME_NOT_STORED, if the Diameter server
-	successfully authenticated the user and authorized the SIP server
-	to proceed with the SIP request.
-
-	Otherwise, the Diameter server MUST set the Result-Code AVP value to
-	DIAMETER_UNABLE_TO_COMPLY, and it MUST NOT include any
-	SIP-Auth-Data-Item AVP.
-
-	The Message Format of the MAA command is as follows:
-
-	<MAA> ::= < Diameter Header: 286, PXY >
-	< Session-Id >
-	{ Auth-Application-Id }
-	{ Result-Code }
-	{ Auth-Session-State }
-	{ Origin-Host }
-	{ Origin-Realm }
-	[ User-Name ]
-	[ SIP-AOR ]
-	[ SIP-Number-Auth-Items ]
-	* [ SIP-Auth-Data-Item ]
-	[ Authorization-Lifetime ]
-	[ Auth-Grace-Period ]
-	[ Redirect-Host ]
-	[ Redirect-Host-Usage ]
-	[ Redirect-Max-Cache-Time ]
-	* [ Proxy-Info ]
-	* [ Route-Record ]
-	* [ AVP ]
-
-	*/
-      struct dict_object * cmd;
-      struct dict_cmd_data data = { 
-	286, 					/* Code */
-	"Multimedia-Auth-Answer", 		/* Name */
-	CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR, 	/* Fixed flags */
-	CMD_FLAG_PROXIABLE 						/* Fixed flag values */
-      };
-      struct local_rules_definition rules[] = 
-	{ 	 {  "Session-Id", 		RULE_FIXED_HEAD, -1, 1 }
-		 ,{  "Auth-Application-Id", 	RULE_REQUIRED,   -1, 1 }
-		 ,{  "Result-Code", 		RULE_REQUIRED,   -1, 1 }
-		 ,{  "Auth-Session-State", 	RULE_REQUIRED,   -1, 1 }
-		 ,{  "Origin-Host", 		RULE_REQUIRED,   -1, 1 }
-		 ,{  "Origin-Realm", 		RULE_REQUIRED,   -1, 1 }
-		 ,{  "User-Name", 		RULE_OPTIONAL,   -1, 1 }
-		 ,{  "SIP-AOR", 			RULE_OPTIONAL,   -1, 1 }
-		 ,{  "SIP-Number-Auth-Items", 	RULE_OPTIONAL,   -1, 1 }
-		 ,{  "SIP-Auth-Data-Item", 	RULE_OPTIONAL,   -1, -1 }
-		 ,{  "Authorization-Lifetime", 	RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Auth-Grace-Period", 	RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Redirect-Host", 		RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Redirect-Host-Usage", 	RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Redirect-Max-Cache-Time", 	RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Proxy-Info", 		RULE_OPTIONAL,   -1, -1 }
-		 ,{  "Route-Record", 		RULE_OPTIONAL,   -1, -1 }
-
-	};
-			
-      CHECK_dict_new( DICT_COMMAND, &data , cxdx_dict, &cmd);
-      PARSE_loc_rules( rules, cmd, AVP_BY_NAME );
-    }
-    /* Server-Assignment-Request (SAR) Command */
-    {
-      /*
-			
-	The Server-Assignment-Request (SAR) command is indicated by the
-	Command-Code set to 284 and the Command Flags' 'R' bit set.  The
-	Diameter client in a SIP server sends this command to the Diameter
-	server to indicate the completion of the authentication process and
-	to request that the Diameter server store the URI of the SIP server
-	that is currently serving the user.  The main functions of the
-	Diameter SAR command are to inform the Diameter server of the URI of
-	the SIP server allocated to the user, and to store or clear it from
-	the Diameter server.  Additionally, the Diameter client can request
-	to download the user profile or part of it.
-
-	During the registration procedure, a SIP server becomes assigned to
-	the user.  The Diameter client in the assigned SIP server MUST
-	include its own URI in the SIP-Server-URI AVP of the
-	Server-Assignment-Request (SAR) Diameter message and send it to the
-	Diameter server.  The Diameter server then becomes aware of the
-	allocation of the SIP server to the user name and the server's URI.
-
-	The Diameter client in the SIP server MAY send a Diameter SAR message
-	because of other reasons.  These reasons are identified in the
-	SIP-Server-Assignment-Type AVP (Section 9.4) value.  For instance, a
-	Diameter client in a SIP server may contact the Diameter server to
-	request deregistration of a user, to inform the Diameter server of an
-	authentication failure, or just to download the user profile.  For a
-	complete description of all the SIP-Server-Assignment-Type AVP
-	values, see Section 9.4.
-
-	Typically the reception of a SIP REGISTER request in a SIP server
-	will trigger the Diameter client in the SIP server to send the
-	Diameter SAR message.  However, if a SIP server is receiving other
-	SIP request, such as INVITE, and the SIP server does not have the
-	user profile, the Diameter client in the SIP server may send the
-	Diameter SAR message to the Diameter server in order to download the
-	user profile and make the Diameter server aware of the SIP server
-	assigned to the user.
-	The user profile is an important piece of information that dictates
-	the behavior of the SIP server when triggering or providing services
-	for the user.  Typically the user profile is divided into:
-
-	o  Services to be rendered to the user when the user is registered
-	and initiates a SIP request.
-
-	o  Services to be rendered to the user when the user is registered
-	and a SIP request destined to that user arrives to the SIP proxy.
-
-	o  Services to be rendered to the user when the user is not
-	registered and a SIP request destined to that user arrives to the
-	SIP proxy.
-
-	The SIP-Server-Assignment-Type AVP indicates the reason why the
-	Diameter client (SIP server) contacted the Diameter server.  If the
-	Diameter client sets the SIP-Server-Assignment-Type AVP value to
-	REGISTRATION, RE_REGISTRATION, UNREGISTERED_USER, NO_ASSIGNMENT,
-	AUTHENTICATION_FAILURE or AUTHENTICATION_TIMEOUT, the Diameter client
-	MUST include exactly one SIP-AOR AVP in the Diameter SAR message.
-
-	The SAR message MAY contain zero or more SIP-Supported-User-Data-Type
-	AVPs.  Each of them contains a type of user data understood by the
-	SIP server.  This allows the Diameter client to provide an indication
-	to the Diameter server of the different format of user data
-	understood by the SIP server.  The Diameter server uses this
-	information to select one or more SIP-User-Data AVPs that will be
-	included in the SAA message.
-
-	The Message Format of the SAR command is as follows:
-
-	<SAR> ::= < Diameter Header: 284, REQ, PXY >
-	< Session-Id >
-	{ Auth-Application-Id }
-	{ Auth-Session-State }
-	{ Origin-Host }
-	{ Origin-Realm }
-	{ Destination-Realm }
-	{ SIP-Server-Assignment-Type }
-	{ SIP-User-Data-Already-Available }
-	[ Destination-Host ]
-	[ User-Name ]
-	[ SIP-Server-URI ]
-	* [ SIP-Supported-User-Data-Type ]
-	* [ SIP-AOR ]
-	* [ Proxy-Info ]
-	* [ Route-Record ]
-	* [ AVP ]
-	*/
-      struct dict_object * cmd;
-      struct dict_cmd_data data = { 
-	284, 					/* Code */
-	"Server-Assignment-Request", 		/* Name */
-	CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR, 	/* Fixed flags */
-	CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE 						/* Fixed flag values */
-      };
-      struct local_rules_definition rules[] = 
-	{ 	 {  "Session-Id", 			RULE_FIXED_HEAD, -1, 1 }
-		 ,{  "Auth-Application-Id", 		RULE_REQUIRED,   -1, 1 }
-		 ,{  "Auth-Session-State", 		RULE_REQUIRED,   -1, 1 }
-		 ,{  "Origin-Host", 			RULE_REQUIRED,   -1, 1 }
-		 ,{  "Origin-Realm", 			RULE_REQUIRED,   -1, 1 }
-		 ,{  "Destination-Realm",		RULE_REQUIRED,   -1, 1 }
-		 ,{  "SIP-Server-Assignment-Type", 	RULE_REQUIRED,   -1, 1 }
-		 ,{  "SIP-User-Data-Already-Available", 	RULE_REQUIRED,   -1, 1 }
-		 ,{  "Destination-Host", 		RULE_OPTIONAL,   -1, 1 }
-		 ,{  "User-Name", 			RULE_OPTIONAL,   -1, 1 }
-		 ,{  "SIP-Server-URI", 			RULE_OPTIONAL,   -1, 1 }
-		 ,{  "SIP-Supported-User-Data-Type", 	RULE_OPTIONAL,   -1, -1 }
-		 ,{  "SIP-AOR", 				RULE_OPTIONAL,   -1, -1 }
-		 ,{  "Proxy-Info", 			RULE_OPTIONAL,   -1, -1 }
-		 ,{  "Route-Record", 			RULE_OPTIONAL,   -1, -1 }
-
-	};
-			
-      CHECK_dict_new( DICT_COMMAND, &data , cxdx_dict, &cmd);
-      PARSE_loc_rules( rules, cmd, AVP_BY_NAME );
-    }
-    /* Server-Assignment-Answer (SAA) Command */
-    {
-      /*
-			
-	The Server-Assignment-Answer (SAA) is indicated by the Command-Code
-	set to 284 and the Command Flags' 'R' bit cleared.  The Diameter
-	server sends this command in response to a previously received
-	Diameter Server-Assignment-Request (SAR) command.  The response may
-	include the user profile or part of it, if requested.
-
-	In addition to the values already defined in RFC 3588 [RFC3588], the
-	Result-Code AVP may contain one of the values defined in
-	Section 10.1.
-
-	The Result-Code AVP value in the Diameter SAA message may indicate a
-	success or an error in the execution of the Diameter SAR command.  If
-	Result-Code AVP value in the Diameter SAA message does not contain an
-	error code, the SAA message MAY include one or more SIP-User-Data
-	AVPs that typically contain the profile of the user, indicating
-	services that the SIP server can provide to that user.
-
-	The Diameter server MAY include one or more
-	SIP-Supported-User-Data-Type AVPs, each one identifying a type of
-	user data format supported in the Diameter server.  If there is not a
-	common supported user data type between the Diameter client and the
-	Diameter server, the Diameter server SHOULD declare its list of
-	supported user data types by including one or more
-	SIP-Supported-User-Data-Type AVPs in a Diameter SAA message.  This
-	indication is merely for debugging reasons, since there is not a
-	fallback mechanism that allows the Diameter client to retrieve the
-	profile in a supported format.
-
-	If the Diameter server requires a User-Name AVP value to process the
-	Diameter SAR request, but the Diameter SAR message did not contain a
-	User-Name AVP value, the Diameter server MUST set the Result-Code AVP
-	value to DIAMETER_USER_NAME_REQUIRED (see Section 10.1.2) and return
-	it in a Diameter SAA message.  Upon reception of this Diameter SAA
-	message with the Result-Code AVP value set to
-	DIAMETER_USER_NAME_REQUIRED, the SIP server typically requests
-	authentication by generating a SIP 401 (Unauthorized) or SIP 407
-	(Proxy Authentication Required) response back to the originator.
-
-	If the User-Name AVP is included in the Diameter SAR message, upon
-	reception of the Diameter SAR message, the Diameter server MUST
-	verify the existence of the user in the realm, i.e., the User-Name
-	AVP value is a valid user within that realm.  If the Diameter server
-	does not recognize the user name received in the User-Name AVP, the
-	Diameter server MUST build a Diameter Server-Assignment-Answer (SAA)
-	message and MUST set the Result-Code AVP to
-	DIAMETER_ERROR_USER_UNKNOWN.
-	Then the Diameter server MUST authorize that User-Name AVP value is a
-	valid authentication name for the SIP or SIPS URI included in the
-	SIP-AOR AVP of the Diameter SAR message.  If this authorization
-	fails, the Diameter server must set the Result-Code AVP to
-	DIAMETER_ERROR_IDENTITIES_DONT_MATCH and send it in a Diameter
-	Server-Assignment-Answer (SAA) message.
-
-	After successful execution of the Diameter SAR command, the Diameter
-	server MUST clear the "authentication pending" flag and SHOULD move
-	the temporarily stored SIP server URI to permanent storage.
-
-	The actions of the Diameter server upon reception of the Diameter SAR
-	message depend on the value of the SIP-Server-Assignment-Type:
-
-	o  If the SIP-Server-Assignment-Type AVP value in the Diameter SAR
-	message is set to REGISTRATION or RE_REGISTRATION, the Diameter
-	server SHOULD verify that there is only one SIP-AOR AVP.
-	Otherwise, the Diameter server MUST answer with a Diameter SAA
-	message with the Result-Code AVP value set to
-	DIAMETER_AVP_OCCURS_TOO_MANY_TIMES and MUST NOT include any
-	SIP-User-Data AVP.  If there is only one SIP-AOR AVP and if the
-	SIP-User-Data-Already-Available AVP value is set to
-	USER_DATA_NOT_AVAILABLE, then the Diameter server SHOULD include
-	one or more user profile data with the SIP or SIPS URI (SIP-AOR
-	AVP) and all other SIP identities associated with that AVP in the
-	SIP-User-Data AVP value of the Diameter SAA message.  On selecting
-	the type of user data, the Diameter server SHOULD take into
-	account the supported formats at the SIP server
-	(SIP-Supported-User-Data-Type AVP in the SAR message) and the
-	local policy.  Additionally, the Diameter server MUST set the
-	Result-Code AVP value to DIAMETER_SUCCESS in the Diameter SAA
-	message.  The Diameter server considers the SIP AOR authenticated
-	and registered.
-
-	o  If the SIP-Server-Assignment-Type AVP value in the Diameter SAR
-	message is set to UNREGISTERED_USER, then the Diameter server MUST
-	store the SIP server address included in the SIP-Server-URI AVP
-	value.  The Diameter server will return the SIP server address in
-	Diameter Location-Info-Answer (LIA) messages.  If the
-	SIP-User-Data-Already-Available AVP value is set to
-	USER_DATA_NOT_AVAILABLE, then the Diameter server SHOULD include
-	one or more user profile data associated with the SIP or SIPS URI
-	(SIP-AOR AVP) and associated identities in the SIP-User-Data AVP
-	value of the Diameter SAA message.  On selecting the type of user
-	data, the Diameter server SHOULD take into account the supported
-	formats at the SIP server (SIP-Supported-User-Data-Type AVP in the
-	SAR message) and the local policy.  The Diameter server MUST set
-	the Result-Code AVP value to DIAMETER_SUCCESS.  The Diameter
-	server considers the SIP AOR UNREGISTERED, but with a SIP server
-	allocated to trigger and provide services for unregistered users.
-	Note that in case of UNREGISTERED_USER (SIP-Server-Assignment-Type
-	AVP), the Diameter server MUST verify that there is only one
-	SIP-AOR AVP.  Otherwise, the Diameter server MUST answer the
-	Diameter SAR message with a Diameter SAA message, and it MUST set
-	the Result-Code AVP value to DIAMETER_AVP_OCCURS_TOO_MANY_TIMES
-	and MUST NOT include any SIP-User-Data AVP.
-	If the User-Name AVP was not present in the Diameter SAR message
-	and the SIP-AOR is not known for the Diameter server, the Diameter
-	server MUST NOT include a User-Name AVP in the Diameter SAA
-	message and MUST set the Result-Code AVP value to
-	DIAMETER_ERROR_USER_UNKNOWN.
-
-	o  If the SIP-Server-Assignment-Type AVP value in the Diameter SAR
-	message is set to TIMEOUT_DEREGISTRATION, USER_DEREGISTRATION,
-	DEREGISTRATION_TOO_MUCH_DATA, or ADMINISTRATIVE_DEREGISTRATION,
-	the Diameter server MUST clear the SIP server address associated
-	with all SIP AORs indicated in each of the SIP-AOR AVP values
-	included in the Diameter SAR message.  The Diameter server
-	considers all of these SIP AORs as not registered.  The Diameter
-	server MUST set the Result-Code AVP value to DIAMETER_SUCCESS in
-	the Diameter SAA message.
-
-	o  If the SIP-Server-Assignment-Type AVP value in the Diameter SAR
-	message is set to TIMEOUT_DEREGISTRATION_STORE_SERVER_NAME or
-	USER_DEREGISTRATION_STORE_SERVER_NAME, the Diameter server MAY
-	keep the SIP server address associated with the SIP AORs included
-	in the SIP-AOR AVP values of the Diameter SAR message, even though
-	the SIP AORs become unregistered.  This feature allows a SIP
-	server to request that the Diameter server remain an assigned SIP
-	server for those SIP AORs (SIP-AOR AVP values) allocated to the
-	same user name, and avoid SIP server assignment.  The Diameter
-	server MUST consider all these SIP AORs as not registered.  If the
-	Diameter server honors the request of the Diameter client (SIP
-	server) to remain as an allocated SIP server, then the Diameter
-	server MUST keep the SIP server assigned to those SIP AORs
-	allocated to the username and MUST set the Result-Code AVP value
-	to DIAMETER_SUCCESS in the Diameter SAA message.  Otherwise, when
-	the Diameter server does not honor the request of the Diameter
-	client (SIP server) to remain as an allocated SIP server, the
-	Diameter server MUST clear the SIP server name assigned to those
-	SIP AORs and it MUST set the Result-Code AVP value to
-	DIAMETER_SUCCESS_SERVER_NAME_NOT_STORED in the Diameter SAA
-	message.
-	o  If the SIP-Server-Assignment-Type AVP value in the Diameter SAR
-	message is set to NO_ASSIGNMENT, the Diameter server SHOULD first
-	verify that the SIP-Server-URI AVP value in the Diameter SAR
-	message is the same URI as the one assigned to the SIP-AOR AVP
-	value.  If they differ, then the Diameter server MUST set the
-	Result-Code AVP value to DIAMETER_UNABLE_TO_COMPLY in the Diameter
-	SAA message.  Otherwise, if the SIP-User-Data-Already-Available
-	AVP value is set to USER_DATA_NOT_AVAILABLE, then the Diameter
-	server SHOULD include the user profile data with the SIP or SIPS
-	URI (SIP-AOR AVP) and all other SIP identities associated with
-	that AVP in the SIP-User-Data AVP value of the Diameter SAA
-	message.  On selecting the type of user data, the Diameter server
-	SHOULD take into account the supported formats at the SIP server
-	(SIP-Supported-User-Data-Type AVP in the SAR message) and the
-	local policy.
-
-	o  If the SIP-Server-Assignment-Type AVP value in the Diameter SAR
-	message is set to AUTHENTICATION_FAILURE or
-	AUTHENTICATION_TIMEOUT, the Diameter server MUST verify that there
-	is exactly one SIP-AOR AVP in the Diameter SAR message.  If the
-	number of occurrences of the SIP-AOR AVP is not exactly one, the
-	Diameter server MUST set the Result-Code AVP value to
-	DIAMETER_AVP_OCCURS_TOO_MANY_TIMES in the Diameter SAA message,
-	and SHOULD not take further actions.  If there is exactly one
-	SIP-AOR AVP in the Diameter SAR message, the Diameter server MUST
-	clear the address of the SIP server assigned to the SIP AOR
-	allocated to the user name, and the Diameter server MUST set the
-	Result-Code AVP value to DIAMETER_SUCCESS in the Diameter SAA
-	message.  The Diameter server MUST consider the SIP AOR as not
-	registered.
-
-	The Message Format of the SAA command is as follows:
-
-	<SAA> ::= < Diameter Header: 284, PXY >
-	< Session-Id >
-	{ Auth-Application-Id }
-	{ Result-Code }
-	{ Auth-Session-State }
-	{ Origin-Host }
-	{ Origin-Realm }
-	* [ SIP-User-Data ]
-	[ SIP-Accounting-Information ]
-	* [ SIP-Supported-User-Data-Type ]
-	[ User-Name ]
-	[ Auth-Grace-Period ]
-	[ Authorization-Lifetime ]
-	[ Redirect-Host ]
-	[ Redirect-Host-Usage ]
-	[ Redirect-Max-Cache-Time ]
-	* [ Proxy-Info ]
-	* [ Route-Record ]
-	* [ AVP ]
-
-
-
-
-	*/
-      struct dict_object * cmd;
-      struct dict_cmd_data data = { 
-	284, 					/* Code */
-	"Server-Assignment-Answer", 		/* Name */
-	CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR, 	/* Fixed flags */
-	CMD_FLAG_PROXIABLE 						/* Fixed flag values */
-      };
-      struct local_rules_definition rules[] = 
-	{ 	 {  "Session-Id", 			RULE_FIXED_HEAD, -1, 1 }
-		 ,{  "Auth-Application-Id", 		RULE_REQUIRED,   -1, 1 }
-		 ,{  "Result-Code", 			RULE_REQUIRED,   -1, 1 }
-		 ,{  "Auth-Session-State", 		RULE_REQUIRED,   -1, 1 }
-		 ,{  "Origin-Host", 			RULE_REQUIRED,   -1, 1 }
-		 ,{  "Origin-Realm", 			RULE_REQUIRED,   -1, 1 }
-		 ,{  "SIP-User-Data",			RULE_OPTIONAL,   -1, -1 }
-		 ,{  "SIP-Accounting-Information", 	RULE_OPTIONAL,   -1, 1 }
-		 ,{  "SIP-Supported-User-Data-Type", 	RULE_OPTIONAL,   -1, -1 }
-		 ,{  "User-Name", 			RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Auth-Grace-Period", 		RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Authorization-Lifetime", 		RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Redirect-Host", 			RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Redirect-Host-Usage", 		RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Redirect-Max-Cache-Time", 		RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Proxy-Info", 			RULE_OPTIONAL,   -1, -1 }
-		 ,{  "Route-Record", 			RULE_OPTIONAL,   -1, -1 }
-
-	};
-			
-      CHECK_dict_new( DICT_COMMAND, &data , cxdx_dict, &cmd);
-      PARSE_loc_rules( rules, cmd, AVP_BY_NAME );
-    }
-    /* Location-Info-Request (LIR) Command */
-    {
-      /*
-			
-	The Location-Info-Request (LIR) is indicated by the Command-Code set
-	to 285 and the Command Flags' 'R' bit set.  The Diameter client in a
-	SIP server sends this command to the Diameter server to request
-	routing information, e.g., the URI of the SIP server assigned to the
-	SIP-AOR AVP value allocated to the users.
-
-	The Message Format of the LIR command is as follows:
-
-	<LIR> ::= < Diameter Header: 285, REQ, PXY >
-	< Session-Id >
-	{ Auth-Application-Id }
-	{ Auth-Session-State }
-	{ Origin-Host }
-	{ Origin-Realm }
-	{ Destination-Realm }
-	{ SIP-AOR }
-	[ Destination-Host ]
-	* [ Proxy-Info ]
-	* [ Route-Record ]
-	* [ AVP ]
-	*/
-      struct dict_object * cmd;
-      struct dict_cmd_data data = { 
-	285, 					/* Code */
-	"Location-Info-Request", 		/* Name */
-	CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR, 	/* Fixed flags */
-	CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE 						/* Fixed flag values */
-      };
-      struct local_rules_definition rules[] = 
-	{ 	 {  "Session-Id", 		RULE_FIXED_HEAD, -1, 1 }
-		 ,{  "Auth-Application-Id", 	RULE_REQUIRED,   -1, 1 }
-		 ,{  "Auth-Session-State", 	RULE_REQUIRED,   -1, 1 }
-		 ,{  "Origin-Host", 		RULE_REQUIRED,   -1, 1 }
-		 ,{  "Origin-Realm", 		RULE_REQUIRED,   -1, 1 }
-		 ,{  "Destination-Realm",	RULE_REQUIRED,   -1, 1 }
-		 ,{  "SIP-AOR", 			RULE_REQUIRED,   -1, 1 }
-		 ,{  "Destination-Host", 	RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Proxy-Info", 		RULE_OPTIONAL,   -1, -1 }
-		 ,{  "Route-Record", 		RULE_OPTIONAL,   -1, -1 }
-
-	};
-			
-      CHECK_dict_new( DICT_COMMAND, &data , cxdx_dict, &cmd);
-      PARSE_loc_rules( rules, cmd, AVP_BY_NAME );
-    }
-    /* Location-Info-Answer (LIA) Command */
-    {
-      /*
-	The Location-Info-Answer (LIA) is indicated by the Command-Code set
-	to 285 and the Command Flags' 'R' bit cleared.  The Diameter server
-	sends this command in response to a previously received Diameter
-	Location-Info-Request (LIR) command.
-
-	In addition to the values already defined in RFC 3588 [RFC3588], the
-	Result-Code AVP may contain one of the values defined in
-	Section 10.1.  When the Diameter server finds an error in processing
-	the Diameter LIR message, the Diameter server MUST stop the process
-	of the message and answer with a Diameter LIA message that includes
-	the appropriate error code in the Result-Code AVP value.  When there
-	is no error, the Diameter server MUST set the Result-Code AVP value
-	to DIAMETER_SUCCESS in the Diameter LIA message.
-
-	One of the errors that the Diameter server may find is that the
-	SIP-AOR AVP value is not a valid user in the realm.  In such cases,
-	the Diameter server MUST set the Result-Code AVP value to
-	DIAMETER_ERROR_USER_UNKNOWN and return it in a Diameter LIA message.
-
-	If the Diameter server cannot process the Diameter LIR command, e.g.,
-	due to a database error, the Diameter server MUST set the Result-Code
-	AVP value to DIAMETER_UNABLE_TO_COMPLY and return it in a Diameter
-	LIA message.  The Diameter server MUST NOT include any SIP-Server-URI
-	or SIP-Server-Capabilities AVP in the Diameter LIA message.
-
-	The Diameter server may or may not be aware of a SIP server assigned
-	to the SIP-AOR AVP value included in the Diameter LIR message.  If
-	the Diameter server is aware of a SIP server allocated to that
-	particular user, the Diameter server MUST include the URI of such SIP
-	server in the SIP-Server-URI AVP and return it in a Diameter LIA
-	message.  This is typically the situation when the user is either
-	registered, or unregistered but a SIP server is still assigned to the
-	user.
-
-	When the Diameter server is not aware of a SIP server allocated to
-	the user (typically the case when the user unregistered), the
-	Result-Code AVP value in the Diameter LIA message depends on whether
-	the Diameter server is aware that the user has services defined for
-	unregistered users:
-
-	o  Those users who have services defined for unregistered users may
-	require the allocation of a SIP server to trigger and perhaps
-	execute those services.  Therefore, when the Diameter server is
-	not aware of an assigned SIP server, but the user has services
-	defined for unregistered users, the Diameter server MUST set the
-	Result-Code AVP value to DIAMETER_UNREGISTERED_SERVICE and return
-	it in a Diameter LIA message.  The Diameter server MAY also
-	include a SIP-Server-Capabilities AVP to facilitate the SIP server
-	(Diameter client) with the selection of an appropriate SIP server
-	with the required capabilities.  Absence of the SIP-Server-
-	Capabilities AVP indicates to the SIP server (Diameter client)
-	that any SIP server is suitable to be allocated for the user.
-
-	o  Those users who do not have service defined for unregistered users
-	do not require further processing.  The Diameter server MUST set
-	the Result-Code AVP value to
-	DIAMETER_ERROR_IDENTITY_NOT_REGISTERED and return it to the
-	Diameter client in a Diameter LIA message.  The SIP server
-	(Diameter client) may return the appropriate SIP response (e.g.,
-	480 (Temporarily unavailable)) to the original SIP request.
-
-	The Message Format of the LIA command is as follows:
-
-	<LIA> ::= < Diameter Header: 285, PXY >
-	< Session-Id >
-	{ Auth-Application-Id }
-	{ Result-Code }
-	{ Auth-Session-State }
-	{ Origin-Host }
-	{ Origin-Realm }
-	[ SIP-Server-URI ]
-	[ SIP-Server-Capabilities ]
-	[ Auth-Grace-Period ]
-	[ Authorization-Lifetime ]
-	[ Redirect-Host ]
-	[ Redirect-Host-Usage ]
-	[ Redirect-Max-Cache-Time ]
-	* [ Proxy-Info ]
-	* [ Route-Record ]
-	* [ AVP ]
-	*/
-      struct dict_object * cmd;
-      struct dict_cmd_data data = { 
-	285, 					/* Code */
-	"Location-Info-Answer", 		/* Name */
-	CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR, 	/* Fixed flags */
-	CMD_FLAG_PROXIABLE 						/* Fixed flag values */
-      };
-      struct local_rules_definition rules[] = 
-	{ 	 {  "Session-Id", 		RULE_FIXED_HEAD, -1, 1 }
-		 ,{  "Auth-Application-Id", 	RULE_REQUIRED,   -1, 1 }
-		 ,{  "Result-Code", 		RULE_REQUIRED,   -1, 1 }
-		 ,{  "Auth-Session-State", 	RULE_REQUIRED,   -1, 1 }
-		 ,{  "Origin-Host", 		RULE_REQUIRED,   -1, 1 }
-		 ,{  "Origin-Realm", 		RULE_REQUIRED,   -1, 1 }
-		 ,{  "SIP-Server-URI",		RULE_OPTIONAL,   -1, 1 }
-		 ,{  "SIP-Server-Capabilities", 	RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Auth-Grace-Period", 	RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Authorization-Lifetime", 	RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Redirect-Host", 		RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Redirect-Host-Usage", 	RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Redirect-Max-Cache-Time", 	RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Proxy-Info", 		RULE_OPTIONAL,   -1, -1 }
-		 ,{  "Route-Record", 		RULE_OPTIONAL,   -1, -1 }
-
-	};
-			
-      CHECK_dict_new( DICT_COMMAND, &data , cxdx_dict, &cmd);
-      PARSE_loc_rules( rules, cmd, AVP_BY_NAME );
-    }
-    /* Registration-Termination-Request (RTR) Command */
-    {
-      /*
-	The Registration-Termination-Request (RTR) command is indicated by
-	the Command-Code set to 287 and the Command Flags' 'R' bit set.  The
-	Diameter server sends this command to the Diameter client in a SIP
-	server to indicate to the SIP server that one or more SIP AORs have
-	to be deregistered.  The command allows an operator to
-	administratively cancel the registration of a user from a centralized
-	Diameter server.
-
-	The Diameter server has the capability to initiate the deregistration
-	of a user and inform the SIP server by means of the Diameter RTR
-	command.  The Diameter server can decide whether only one SIP AOR is
-	going to be deregistered, a list of SIP AORs, or all the SIP AORs
-	allocated to the user.
-
-	The absence of a SIP-AOR AVP in the Diameter RTR message indicates
-	that all the SIP AORs allocated to the user identified by the
-	User-Name AVP are being deregistered.
-
-	The Diameter server MUST include a SIP-Deregistration-Reason AVP
-	value to indicate the reason for the deregistration.
-
-	The Message Format of the RTR command is as follows:
-
-	<RTR> ::= < Diameter Header: 287, REQ, PXY >
-	< Session-Id >
-	{ Auth-Application-Id }
-	{ Auth-Session-State }
-	{ Origin-Host }
-	{ Origin-Realm }
-	{ Destination-Host }
-	{ SIP-Deregistration-Reason }
-	[ Destination-Realm ]
-	[ User-Name ]
-	* [ SIP-AOR ]
-	* [ Proxy-Info ]
-	* [ Route-Record ]
-	* [ AVP ]
-
-	*/
-
-      struct dict_object * cmd;
-      struct dict_cmd_data data = 
-	{ 
-	  287, 					/* Code */
-	  "Registration-Termination-Request", 		/* Name */
-	  CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR, 	/* Fixed flags */
-	  CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE 			/* Fixed flag values */
-	};
-
-      struct local_rules_definition rules[] = 
-	{  
-	  { "Session-Id",               RULE_FIXED_HEAD, -1,  1 },
-	  { "Auth-Application-Id", 	RULE_REQUIRED,   -1,  1 },
-	  { "Auth-Session-State", 	RULE_REQUIRED,   -1,  1 },
-	  { "Origin-Host", 		RULE_REQUIRED,   -1,  1 },
-	  { "Origin-Realm", 		RULE_REQUIRED,   -1,  1 },
-	  { "Destination-Host", 	RULE_REQUIRED,   -1,  1 },
-	  { "SIP-Deregistration-Reason",RULE_REQUIRED,   -1,  1 },	
-	  { "Destination-Realm",	RULE_OPTIONAL,   -1,  1 },
-	  { "User-Name", 		RULE_OPTIONAL,   -1,  1 },
-	  { "SIP-AOR", 		        RULE_REQUIRED,   -1, -1 },
-	  { "Proxy-Info", 		RULE_OPTIONAL,   -1, -1 },
-	  { "Route-Record", 		RULE_OPTIONAL,   -1, -1 }
-	};
-      
-      CHECK_dict_new( DICT_COMMAND, &data , cxdx_dict, &cmd);
-      PARSE_loc_rules( rules, cmd, AVP_BY_NAME );
-    }
-    /* Registration-Termination-Answer (RTA) Command */
-    {
-      /*
-	The Registration-Termination-Answer (RTA) is indicated by the
-	Command-Code set to 287 and the Command Flags' 'R' bit cleared.  The
-	Diameter client sends this command in response to a previously
-	received Diameter Registration-Termination-Request (RTR) command.
-
-	In addition to the values already defined in RFC 3588 [RFC3588], the
-	Result-Code AVP may contain one of the values defined in
-	Section 10.1.
-
-	If the SIP server (Diameter client) requires a User-Name AVP value to
-	process the Diameter RTR request, but the Diameter RTR message did
-	not contain a User-Name AVP value, the Diameter client MUST set the
-	Result-Code AVP value to DIAMETER_USER_NAME_REQUIRED (see Section
-	10.1.2) and return it in a Diameter RTA message.
-
-	The SIP server (Diameter client) applies the administrative
-	deregistration to each of the URIs included in each of the SIP-AOR
-	AVP values, or, if there is no SIP-AOR AVP present in the Diameter
-	RTR request, to all the URIs allocated to the User-Name AVP value.
-
-	The value of the SIP-Deregistration-Reason AVP in the Diameter RTR
-	command has an effect on the actions performed at the SIP server
-	(Diameter client):
-
-	o  If the value is set to PERMANENT_TERMINATION, then the user has
-	terminated his/her registration to the realm.  If informing the
-	interested parties (e.g., subscribers to the "reg" event
-	[RFC3680]) about the administrative deregistration is supported
-	through SIP procedures, the SIP server (Diameter client) will do
-	so.  The Diameter Client in the SIP Server SHOULD NOT request a
-	new user registration.  The SIP server clears the registration
-	state of the deregistered AORs.
-
-	o  If the value is set to NEW_SIP_SERVER_ASSIGNED, the Diameter
-	server informs the SIP server (Diameter client) that a new SIP
-	server has been allocated to the user, due to some reason.  The
-	SIP server, if supported through SIP procedures, will inform the
-	interested parties (e.g., subscribers to the "reg" event
-	[RFC3680]) about the administrative deregistration at this SIP
-	server.  The Diameter client in the SIP server SHOULD NOT request
-	a new user registration.  The SIP server clears the registration
-	state of the deregistered SIP AORs.
-
-	o  If the value is set to SIP_SERVER_CHANGE, the Diameter server
-	informs the SIP server (Diameter client) that a new SIP server has
-	to be allocated to the user, e.g., due to user's capabilities
-	requiring a new SIP server, or not enough resources in the current
-	SIP server.  If informing the interested parties about the
-	administrative deregistration is supported through SIP procedures
-	(e.g., subscriptions to the "reg" event [RFC3680]), the SIP server
-	will do so.  The Diameter client in the SIP Server SHOULD NOT
-	request a new user registration.  The SIP server clears the
-	registration state of the deregistered SIP AORs.
-
-	o  If the value is set to REMOVE_SIP_SERVER, the Diameter server
-	informs the SIP server (Diameter client) that the SIP server will
-	no longer be bound in the Diameter server with that user.  The SIP
-	server can delete all data related to the user.
-
-	The Message Format of the RTA command is as follows:
-
-	<RTA> ::= < Diameter Header: 287, PXY >
-	< Session-Id >
-	{ Auth-Application-Id }
-	{ Result-Code }
-	{ Auth-Session-State }
-	{ Origin-Host }
-	{ Origin-Realm }
-	[ Authorization-Lifetime ]
-	[ Auth-Grace-Period ]
-	[ Redirect-Host ]
-	[ Redirect-Host-Usage ]
-	[ Redirect-Max-Cache-Time ]
-	* [ Proxy-Info ]
-	* [ Route-Record ]
-	* [ AVP ]
-
-	*/
-      struct dict_object * cmd;
-      struct dict_cmd_data data = { 
-	287, 					/* Code */
-	"Registration-Termination-Answer", 		/* Name */
-	CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR, 	/* Fixed flags */
-	CMD_FLAG_PROXIABLE 						/* Fixed flag values */
-      };
-      struct local_rules_definition rules[] = 
-	{ 	 {  "Session-Id", 		RULE_FIXED_HEAD, -1, 1 }
-		 ,{  "Auth-Application-Id", 	RULE_REQUIRED,   -1, 1 }
-		 ,{  "Result-Code", 		RULE_REQUIRED,   -1, 1 }
-		 ,{  "Auth-Session-State", 	RULE_REQUIRED,   -1, 1 }
-		 ,{  "Origin-Host", 		RULE_REQUIRED,   -1, 1 }
-		 ,{  "Origin-Realm", 		RULE_REQUIRED,   -1, 1 }
-		 ,{  "Authorization-Lifetime",	RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Auth-Grace-Period", 	RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Redirect-Host", 		RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Redirect-Host-Usage", 	RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Redirect-Max-Cache-Time", 	RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Proxy-Info", 		RULE_OPTIONAL,   -1, -1 }
-		 ,{  "Route-Record", 		RULE_OPTIONAL,   -1, -1 }
-
-	};
-			
-      CHECK_dict_new( DICT_COMMAND, &data , cxdx_dict, &cmd);
-      PARSE_loc_rules( rules, cmd, AVP_BY_NAME );
-    }
-		
-    /* Push-Profile-Request (PPR) Command */
-    {
-      /*
-	The Push-Profile-Request (PPR) command is indicated by the
-	Command-Code set to 288 and the Command Flags' 'R' bit set.  The
-	Diameter server sends this command to the Diameter client in a SIP
-	server to update either the user profile of an already registered
-	user in that SIP server or the SIP accounting information.  This
-	allows an operator to modify the data of a user profile or the
-	accounting information and push it to the SIP server where the user
-	is registered.
-
-	Each user has a user profile associated with him/her and other
-	accounting information.  The profile or the accounting information
-	may change with time, e.g., due to addition of new services to the
-	user.  When the user profile or the accounting information changes,
-	the Diameter server sends a Diameter Push-Profile-Request (PPR)
-	command to the Diameter client in a SIP server, in order to start
-	applying those new services.
-
-	A PPR command MAY contain a SIP-Accounting-Information AVP that
-	updates the addresses of the accounting servers.  Changes in the
-	addresses of the accounting servers take effect immediately.  The
-	Diameter client SHOULD close any existing accounting session with the
-	existing server and start providing accounting information to the
-	newly acquired accounting server.
-
-	A PPR command MAY contain zero or more SIP-User-Data AVP values
-	containing the new user profile.  On selecting the type of user data,
-	the Diameter server SHOULD take into account the supported formats at
-	the SIP server (SIP-Supported-User-Data-Type AVP sent in a previous
-	SAR message) and the local policy.
-
-	The User-Name AVP indicates the user to whom the profile is
-	applicable.
-
-	The Message Format of the PPR command is as follows:
-
-	<PPR> ::= < Diameter Header: 288, REQ, PXY >
-	< Session-Id >
-	{ Auth-Application-Id }
-	{ Auth-Session-State }
-	{ Origin-Host }
-	{ Origin-Realm }
-	{ Destination-Realm }
-	{ User-Name }
-	* [ SIP-User-Data ]
-	[ SIP-Accounting-Information ]
-	[ Destination-Host ]
-	[ Authorization-Lifetime ]
-	[ Auth-Grace-Period ]
-	* [ Proxy-Info ]
-	* [ Route-Record ]
-	* [ AVP ]
-
-	*/
-      struct dict_object * cmd;
-      struct dict_cmd_data data = { 
-	288, 					/* Code */
-	"Push-Profile-Request", 		/* Name */
-	CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR, 	/* Fixed flags */
-	CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE 						/* Fixed flag values */
-      };
-      struct local_rules_definition rules[] = 
-	{ 	 {  "Session-Id", 			RULE_FIXED_HEAD, -1, 1 }
-		 ,{  "Auth-Application-Id", 		RULE_REQUIRED,   -1, 1 }
-		 ,{  "Auth-Session-State", 		RULE_REQUIRED,   -1, 1 }
-		 ,{  "Origin-Host", 			RULE_REQUIRED,   -1, 1 }
-		 ,{  "Origin-Realm", 			RULE_REQUIRED,   -1, 1 }
-		 ,{  "Destination-Realm",		RULE_REQUIRED,   -1, 1 }
-		 ,{  "User-Name", 			RULE_REQUIRED,   -1, 1 }
-		 ,{  "SIP-User-Data", 			RULE_OPTIONAL,   -1, -1 }
-		 ,{  "SIP-Accounting-Information", 	RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Destination-Host", 		RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Authorization-Lifetime", 		RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Auth-Grace-Period", 		RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Proxy-Info", 			RULE_OPTIONAL,   -1, -1 }
-		 ,{  "Route-Record", 			RULE_OPTIONAL,   -1, -1 }
-
-	};
-			
-      CHECK_dict_new( DICT_COMMAND, &data , cxdx_dict, &cmd);
-      PARSE_loc_rules( rules, cmd, AVP_BY_NAME );
-    }
-    /* Push-Profile-Answer (PPA) Command */
-    {
-      /*
-			
-			
-	The Push-Profile-Answer (PPA) is indicated by the Command-Code set to
-	288 and the Command Flags' 'R' bit cleared.  The Diameter client
-	sends this command in response to a previously received Diameter
-	Push-Profile-Request (PPR) command.
-
-	In addition to the values already defined in RFC 3588 [RFC3588], the
-	Result-Code AVP may contain one of the values defined in
-	Section 10.1.
-
-	If there is no error when processing the received Diameter PPR
-	message, the SIP server (Diameter client) MUST download the received
-	user profile from the SIP-User-Data AVP values in the Diameter PPR
-	message and store it associated with the user specified in the
-	User-Name AVP value.
-
-	If the SIP server does not recognize or does not support some of the
-	data transferred in the SIP-User-Data AVP values, the Diameter client
-	in the SIP server MUST return a Diameter PPA message that includes a
-	Result-Code AVP set to the value DIAMETER_ERROR_NOT_SUPPORTED_USER_DATA.
-
-	If the SIP server (Diameter client) receives a Diameter PPR message
-	with a User-Name AVP that is unknown, the Diameter client MUST set
-	the Result-Code AVP value to DIAMETER_ERROR_USER_UNKNOWN and MUST
-	return it to the Diameter server in a Diameter PPA message.
-
-	If the SIP server (Diameter client) receives in the
-	SIP-User-Data-Content AVP value (of the grouped SIP-User-Data AVP)
-	more data than it can accept, it MUST set the Result-Code AVP value
-	to DIAMETER_ERROR_TOO_MUCH_DATA and MUST return it to the Diameter
-	server in a Diameter PPA message.  The SIP server MUST NOT override
-	the existing user profile with the one received in the PPR message.
-
-	If the Diameter server receives the Result-Code AVP value set to
-	DIAMETER_ERROR_TOO_MUCH_DATA in a Diameter PPA message, it SHOULD
-	force a new re-registration of the user by sending to the Diameter
-	client a Diameter Registration-Termination-Request (RTR) with the
-	SIP-Deregistration-Reason AVP value set to SIP_SERVER_CHANGE.  This
-	will force a re-registration of the user and will trigger a selection
-	of a new SIP server.
-
-	If the Diameter client is not able to honor the command, for any
-	other reason, it MUST set the Result-Code AVP value to
-	DIAMETER_UNABLE_TO_COMPLY and it MUST return it in a Diameter PPA
-	message.
-
-	The Message Format of the PPA command is as follows:
-
-	<PPA> ::= < Diameter Header: 288, PXY >
-	< Session-Id >
-	{ Auth-Application-Id }
-	{ Result-Code }
-	{ Auth-Session-State }
-	{ Origin-Host }
-	{ Origin-Realm }
-	[ Redirect-Host ]
-	[ Redirect-Host-Usage ]
-	[ Redirect-Max-Cache-Time ]
-	* [ Proxy-Info ]
-	* [ Route-Record ]
-	* [ AVP ]
-
-
-
-	*/
-      struct dict_object * cmd;
-      struct dict_cmd_data data = { 
-	288, 					/* Code */
-	"Push-Profile-Answer", 		/* Name */
-	CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR, 	/* Fixed flags */
-	CMD_FLAG_PROXIABLE 						/* Fixed flag values */
-      };
-      struct local_rules_definition rules[] = 
-	{ 	 {  "Session-Id", 		RULE_FIXED_HEAD, -1, 1 }
-		 ,{  "Auth-Application-Id", 	RULE_REQUIRED,   -1, 1 }
-		 ,{  "Result-Code", 		RULE_REQUIRED,   -1, 1 }
-		 ,{  "Auth-Session-State", 	RULE_REQUIRED,   -1, 1 }
-		 ,{  "Origin-Host", 		RULE_REQUIRED,   -1, 1 }
-		 ,{  "Origin-Realm", 		RULE_REQUIRED,   -1, 1 }
-		 ,{  "Redirect-Host",		RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Redirect-Host-Usage", 	RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Redirect-Max-Cache-Time", 	RULE_OPTIONAL,   -1, 1 }
-		 ,{  "Proxy-Info", 		RULE_OPTIONAL,   -1, -1 }
-		 ,{  "Route-Record", 		RULE_OPTIONAL,   -1, -1 }
-
-	};
-			
-      CHECK_dict_new( DICT_COMMAND, &data , cxdx_dict, &cmd);
-      PARSE_loc_rules( rules, cmd, AVP_BY_NAME );
-    }
-
-#endif /* TODO - NRGJ */
+      /* MAR - Multimedia-Auth-Request (303, REQ) */
+      {
+        struct dict_cmd_data data = {
+          303,
+          "Multimedia-Auth-Request",
+          CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR,
+          CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE
+        };
+        struct local_rules_definition rules[] = {
+           { "Session-Id",                    RULE_FIXED_HEAD, -1,  1 }
+          ,{ "Vendor-Specific-Application-Id",RULE_REQUIRED,   -1,  1 }
+          ,{ "Auth-Session-State",             RULE_REQUIRED,   -1,  1 }
+          ,{ "Origin-Host",                    RULE_REQUIRED,   -1,  1 }
+          ,{ "Origin-Realm",                   RULE_REQUIRED,   -1,  1 }
+          ,{ "Destination-Realm",              RULE_REQUIRED,   -1,  1 }
+          ,{ "User-Name",                      RULE_REQUIRED,   -1,  1 }
+          ,{ "Public-Identity",                RULE_REQUIRED,   -1,  1 }
+          ,{ "SIP-Auth-Data-Item",             RULE_REQUIRED,   -1,  1 }
+          ,{ "SIP-Number-Auth-Items",          RULE_REQUIRED,   -1,  1 }
+          ,{ "Server-Name",                    RULE_REQUIRED,   -1,  1 }
+          ,{ "Destination-Host",               RULE_OPTIONAL,   -1,  1 }
+          ,{ "Supported-Features",             RULE_OPTIONAL,   -1, -1 }
+          ,{ "Proxy-Info",                     RULE_OPTIONAL,   -1, -1 }
+          ,{ "Route-Record",                   RULE_OPTIONAL,   -1, -1 }
+        };
+        CHECK_dict_new( DICT_COMMAND, &data, cxdx_dict, &cmd );
+        PARSE_loc_rules( rules, cmd, AVP_BY_NAME_ALL_VENDORS );
+      }
+
+      /* MAA - Multimedia-Auth-Answer (303, ANS) */
+      {
+        struct dict_cmd_data data = {
+          303,
+          "Multimedia-Auth-Answer",
+          CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR,
+          CMD_FLAG_PROXIABLE
+        };
+        struct local_rules_definition rules[] = {
+           { "Session-Id",                    RULE_FIXED_HEAD, -1,  1 }
+          ,{ "Vendor-Specific-Application-Id",RULE_REQUIRED,   -1,  1 }
+          ,{ "Result-Code",                   RULE_OPTIONAL,   -1,  1 }
+          ,{ "Experimental-Result",           RULE_OPTIONAL,   -1,  1 }
+          ,{ "Auth-Session-State",             RULE_REQUIRED,   -1,  1 }
+          ,{ "Origin-Host",                    RULE_REQUIRED,   -1,  1 }
+          ,{ "Origin-Realm",                   RULE_REQUIRED,   -1,  1 }
+          ,{ "User-Name",                      RULE_OPTIONAL,   -1,  1 }
+          ,{ "Public-Identity",                RULE_OPTIONAL,   -1,  1 }
+          ,{ "SIP-Auth-Data-Item",             RULE_OPTIONAL,   -1, -1 }
+          ,{ "SIP-Number-Auth-Items",          RULE_OPTIONAL,   -1,  1 }
+          ,{ "Supported-Features",             RULE_OPTIONAL,   -1, -1 }
+          ,{ "Failed-AVP",                     RULE_OPTIONAL,   -1, -1 }
+          ,{ "Proxy-Info",                     RULE_OPTIONAL,   -1, -1 }
+          ,{ "Route-Record",                   RULE_OPTIONAL,   -1, -1 }
+        };
+        CHECK_dict_new( DICT_COMMAND, &data, cxdx_dict, &cmd );
+        PARSE_loc_rules( rules, cmd, AVP_BY_NAME_ALL_VENDORS );
+      }
+
+      /* SAR - Server-Assignment-Request (284, REQ) */
+      {
+        struct dict_cmd_data data = {
+          284,
+          "Server-Assignment-Request",
+          CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR,
+          CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE
+        };
+        struct local_rules_definition rules[] = {
+           { "Session-Id",                    RULE_FIXED_HEAD, -1,  1 }
+          ,{ "Vendor-Specific-Application-Id",RULE_REQUIRED,   -1,  1 }
+          ,{ "Auth-Session-State",             RULE_REQUIRED,   -1,  1 }
+          ,{ "Origin-Host",                    RULE_REQUIRED,   -1,  1 }
+          ,{ "Origin-Realm",                   RULE_REQUIRED,   -1,  1 }
+          ,{ "Destination-Realm",              RULE_REQUIRED,   -1,  1 }
+          ,{ "Server-Name",                    RULE_REQUIRED,   -1,  1 }
+          ,{ "Server-Assignment-Type",         RULE_REQUIRED,   -1,  1 }
+          ,{ "User-Data-Already-Available",    RULE_REQUIRED,   -1,  1 }
+          ,{ "Destination-Host",               RULE_OPTIONAL,   -1,  1 }
+          ,{ "User-Name",                      RULE_OPTIONAL,   -1,  1 }
+          ,{ "Public-Identity",                RULE_OPTIONAL,   -1, -1 }
+          ,{ "Wildcarded-Public-Identity",     RULE_OPTIONAL,   -1,  1 }
+          ,{ "Wildcarded-IMPU",                RULE_OPTIONAL,   -1,  1 }
+          ,{ "Supported-Features",             RULE_OPTIONAL,   -1, -1 }
+          ,{ "Proxy-Info",                     RULE_OPTIONAL,   -1, -1 }
+          ,{ "Route-Record",                   RULE_OPTIONAL,   -1, -1 }
+        };
+        CHECK_dict_new( DICT_COMMAND, &data, cxdx_dict, &cmd );
+        PARSE_loc_rules( rules, cmd, AVP_BY_NAME_ALL_VENDORS );
+      }
+
+      /* SAA - Server-Assignment-Answer (284, ANS) */
+      {
+        struct dict_cmd_data data = {
+          284,
+          "Server-Assignment-Answer",
+          CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR,
+          CMD_FLAG_PROXIABLE
+        };
+        struct local_rules_definition rules[] = {
+           { "Session-Id",                    RULE_FIXED_HEAD, -1,  1 }
+          ,{ "Vendor-Specific-Application-Id",RULE_REQUIRED,   -1,  1 }
+          ,{ "Result-Code",                   RULE_OPTIONAL,   -1,  1 }
+          ,{ "Experimental-Result",           RULE_OPTIONAL,   -1,  1 }
+          ,{ "Auth-Session-State",             RULE_REQUIRED,   -1,  1 }
+          ,{ "Origin-Host",                    RULE_REQUIRED,   -1,  1 }
+          ,{ "Origin-Realm",                   RULE_REQUIRED,   -1,  1 }
+          ,{ "User-Name",                      RULE_OPTIONAL,   -1,  1 }
+          ,{ "User-Data",                      RULE_OPTIONAL,   -1,  1 }
+          ,{ "Charging-Information",           RULE_OPTIONAL,   -1,  1 }
+          ,{ "Associated-Identities",          RULE_OPTIONAL,   -1,  1 }
+          ,{ "Loose-Route-Indication",         RULE_OPTIONAL,   -1,  1 }
+          ,{ "SCSCF-Restoration-Info",         RULE_OPTIONAL,   -1, -1 }
+          ,{ "Associated-Registered-Identities", RULE_OPTIONAL, -1,  1 }
+          ,{ "Server-Name",                    RULE_OPTIONAL,   -1,  1 }
+          ,{ "Wildcarded-Public-Identity",     RULE_OPTIONAL,   -1,  1 }
+          ,{ "Wildcarded-IMPU",                RULE_OPTIONAL,   -1,  1 }
+          ,{ "Supported-Features",             RULE_OPTIONAL,   -1, -1 }
+          ,{ "Failed-AVP",                     RULE_OPTIONAL,   -1, -1 }
+          ,{ "Proxy-Info",                     RULE_OPTIONAL,   -1, -1 }
+          ,{ "Route-Record",                   RULE_OPTIONAL,   -1, -1 }
+        };
+        CHECK_dict_new( DICT_COMMAND, &data, cxdx_dict, &cmd );
+        PARSE_loc_rules( rules, cmd, AVP_BY_NAME_ALL_VENDORS );
+      }
+
+      /* LIR - Location-Info-Request (285, REQ) */
+      {
+        struct dict_cmd_data data = {
+          285,
+          "Location-Info-Request",
+          CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR,
+          CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE
+        };
+        struct local_rules_definition rules[] = {
+           { "Session-Id",                    RULE_FIXED_HEAD, -1,  1 }
+          ,{ "Vendor-Specific-Application-Id",RULE_REQUIRED,   -1,  1 }
+          ,{ "Auth-Session-State",             RULE_REQUIRED,   -1,  1 }
+          ,{ "Origin-Host",                    RULE_REQUIRED,   -1,  1 }
+          ,{ "Origin-Realm",                   RULE_REQUIRED,   -1,  1 }
+          ,{ "Destination-Realm",              RULE_REQUIRED,   -1,  1 }
+          ,{ "Public-Identity",                RULE_REQUIRED,   -1,  1 }
+          ,{ "Destination-Host",               RULE_OPTIONAL,   -1,  1 }
+          ,{ "User-Authorization-Type",        RULE_OPTIONAL,   -1,  1 }
+          ,{ "Supported-Features",             RULE_OPTIONAL,   -1, -1 }
+          ,{ "Proxy-Info",                     RULE_OPTIONAL,   -1, -1 }
+          ,{ "Route-Record",                   RULE_OPTIONAL,   -1, -1 }
+        };
+        CHECK_dict_new( DICT_COMMAND, &data, cxdx_dict, &cmd );
+        PARSE_loc_rules( rules, cmd, AVP_BY_NAME_ALL_VENDORS );
+      }
+
+      /* LIA - Location-Info-Answer (285, ANS) */
+      {
+        struct dict_cmd_data data = {
+          285,
+          "Location-Info-Answer",
+          CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR,
+          CMD_FLAG_PROXIABLE
+        };
+        struct local_rules_definition rules[] = {
+           { "Session-Id",                    RULE_FIXED_HEAD, -1,  1 }
+          ,{ "Vendor-Specific-Application-Id",RULE_REQUIRED,   -1,  1 }
+          ,{ "Result-Code",                   RULE_OPTIONAL,   -1,  1 }
+          ,{ "Experimental-Result",           RULE_OPTIONAL,   -1,  1 }
+          ,{ "Auth-Session-State",             RULE_REQUIRED,   -1,  1 }
+          ,{ "Origin-Host",                    RULE_REQUIRED,   -1,  1 }
+          ,{ "Origin-Realm",                   RULE_REQUIRED,   -1,  1 }
+          ,{ "Server-Name",                    RULE_OPTIONAL,   -1,  1 }
+          ,{ "Server-Capabilities",            RULE_OPTIONAL,   -1,  1 }
+          ,{ "Wildcarded-Public-Identity",     RULE_OPTIONAL,   -1,  1 }
+          ,{ "Wildcarded-IMPU",                RULE_OPTIONAL,   -1,  1 }
+          ,{ "LIA-Flags",                      RULE_OPTIONAL,   -1,  1 }
+          ,{ "Supported-Features",             RULE_OPTIONAL,   -1, -1 }
+          ,{ "Failed-AVP",                     RULE_OPTIONAL,   -1, -1 }
+          ,{ "Proxy-Info",                     RULE_OPTIONAL,   -1, -1 }
+          ,{ "Route-Record",                   RULE_OPTIONAL,   -1, -1 }
+        };
+        CHECK_dict_new( DICT_COMMAND, &data, cxdx_dict, &cmd );
+        PARSE_loc_rules( rules, cmd, AVP_BY_NAME_ALL_VENDORS );
+      }
+
+      /* RTR - Registration-Termination-Request (287, REQ) */
+      {
+        struct dict_cmd_data data = {
+          287,
+          "Registration-Termination-Request",
+          CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR,
+          CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE
+        };
+        struct local_rules_definition rules[] = {
+           { "Session-Id",                    RULE_FIXED_HEAD, -1,  1 }
+          ,{ "Vendor-Specific-Application-Id",RULE_REQUIRED,   -1,  1 }
+          ,{ "Auth-Session-State",             RULE_REQUIRED,   -1,  1 }
+          ,{ "Origin-Host",                    RULE_REQUIRED,   -1,  1 }
+          ,{ "Origin-Realm",                   RULE_REQUIRED,   -1,  1 }
+          ,{ "Destination-Realm",              RULE_REQUIRED,   -1,  1 }
+          ,{ "Destination-Host",               RULE_REQUIRED,   -1,  1 }
+          ,{ "User-Name",                      RULE_REQUIRED,   -1,  1 }
+          ,{ "Deregistration-Reason",          RULE_REQUIRED,   -1,  1 }
+          ,{ "Associated-Identities",          RULE_OPTIONAL,   -1,  1 }
+          ,{ "Public-Identity",                RULE_OPTIONAL,   -1, -1 }
+          ,{ "Supported-Features",             RULE_OPTIONAL,   -1, -1 }
+          ,{ "Proxy-Info",                     RULE_OPTIONAL,   -1, -1 }
+          ,{ "Route-Record",                   RULE_OPTIONAL,   -1, -1 }
+        };
+        CHECK_dict_new( DICT_COMMAND, &data, cxdx_dict, &cmd );
+        PARSE_loc_rules( rules, cmd, AVP_BY_NAME_ALL_VENDORS );
+      }
+
+      /* RTA - Registration-Termination-Answer (287, ANS) */
+      {
+        struct dict_cmd_data data = {
+          287,
+          "Registration-Termination-Answer",
+          CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR,
+          CMD_FLAG_PROXIABLE
+        };
+        struct local_rules_definition rules[] = {
+           { "Session-Id",                    RULE_FIXED_HEAD, -1,  1 }
+          ,{ "Vendor-Specific-Application-Id",RULE_REQUIRED,   -1,  1 }
+          ,{ "Result-Code",                   RULE_OPTIONAL,   -1,  1 }
+          ,{ "Experimental-Result",           RULE_OPTIONAL,   -1,  1 }
+          ,{ "Auth-Session-State",             RULE_REQUIRED,   -1,  1 }
+          ,{ "Origin-Host",                    RULE_REQUIRED,   -1,  1 }
+          ,{ "Origin-Realm",                   RULE_REQUIRED,   -1,  1 }
+          ,{ "Associated-Identities",          RULE_OPTIONAL,   -1,  1 }
+          ,{ "Supported-Features",             RULE_OPTIONAL,   -1, -1 }
+          ,{ "Failed-AVP",                     RULE_OPTIONAL,   -1, -1 }
+          ,{ "Proxy-Info",                     RULE_OPTIONAL,   -1, -1 }
+          ,{ "Route-Record",                   RULE_OPTIONAL,   -1, -1 }
+        };
+        CHECK_dict_new( DICT_COMMAND, &data, cxdx_dict, &cmd );
+        PARSE_loc_rules( rules, cmd, AVP_BY_NAME_ALL_VENDORS );
+      }
+
+      /* PPR - Push-Profile-Request (288, REQ) */
+      {
+        struct dict_cmd_data data = {
+          288,
+          "Push-Profile-Request",
+          CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR,
+          CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE
+        };
+        struct local_rules_definition rules[] = {
+           { "Session-Id",                    RULE_FIXED_HEAD, -1,  1 }
+          ,{ "Vendor-Specific-Application-Id",RULE_REQUIRED,   -1,  1 }
+          ,{ "Auth-Session-State",             RULE_REQUIRED,   -1,  1 }
+          ,{ "Origin-Host",                    RULE_REQUIRED,   -1,  1 }
+          ,{ "Origin-Realm",                   RULE_REQUIRED,   -1,  1 }
+          ,{ "Destination-Realm",              RULE_REQUIRED,   -1,  1 }
+          ,{ "Destination-Host",               RULE_REQUIRED,   -1,  1 }
+          ,{ "User-Name",                      RULE_REQUIRED,   -1,  1 }
+          ,{ "User-Data",                      RULE_OPTIONAL,   -1,  1 }
+          ,{ "Charging-Information",           RULE_OPTIONAL,   -1,  1 }
+          ,{ "SIP-Auth-Data-Item",             RULE_OPTIONAL,   -1,  1 }
+          ,{ "Supported-Features",             RULE_OPTIONAL,   -1, -1 }
+          ,{ "Proxy-Info",                     RULE_OPTIONAL,   -1, -1 }
+          ,{ "Route-Record",                   RULE_OPTIONAL,   -1, -1 }
+        };
+        CHECK_dict_new( DICT_COMMAND, &data, cxdx_dict, &cmd );
+        PARSE_loc_rules( rules, cmd, AVP_BY_NAME_ALL_VENDORS );
+      }
+
+      /* PPA - Push-Profile-Answer (288, ANS) */
+      {
+        struct dict_cmd_data data = {
+          288,
+          "Push-Profile-Answer",
+          CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR,
+          CMD_FLAG_PROXIABLE
+        };
+        struct local_rules_definition rules[] = {
+           { "Session-Id",                    RULE_FIXED_HEAD, -1,  1 }
+          ,{ "Vendor-Specific-Application-Id",RULE_REQUIRED,   -1,  1 }
+          ,{ "Result-Code",                   RULE_OPTIONAL,   -1,  1 }
+          ,{ "Experimental-Result",           RULE_OPTIONAL,   -1,  1 }
+          ,{ "Auth-Session-State",             RULE_REQUIRED,   -1,  1 }
+          ,{ "Origin-Host",                    RULE_REQUIRED,   -1,  1 }
+          ,{ "Origin-Realm",                   RULE_REQUIRED,   -1,  1 }
+          ,{ "Supported-Features",             RULE_OPTIONAL,   -1, -1 }
+          ,{ "Failed-AVP",                     RULE_OPTIONAL,   -1, -1 }
+          ,{ "Proxy-Info",                     RULE_OPTIONAL,   -1, -1 }
+          ,{ "Route-Record",                   RULE_OPTIONAL,   -1, -1 }
+        };
+        CHECK_dict_new( DICT_COMMAND, &data, cxdx_dict, &cmd );
+        PARSE_loc_rules( rules, cmd, AVP_BY_NAME_ALL_VENDORS );
+      }
 
   }  /* end Command section */
 
@@ -1735,4 +886,4 @@ int cxdx_dict_init(char * conffile)
 }
 
 
-EXTENSION_ENTRY("dict_cxdx", cxdx_dict_init);
+EXTENSION_ENTRY("dict_cxdx", cxdx_dict_init, "dict_dcca_3gpp");
