@@ -53,7 +53,31 @@ wget https://github.com/freeDiameter/freeDiameter/archive/refs/tags/v1.5.0.tar.g
 
 ## How to Build
 
-1. Clone the repo and checkout your branch.
-2. Create a tarball:
+## Git Setup (one-time per clone)
+
+`contrib/RPM` is maintained exclusively in the `integration-testing` branch.
+When merging feature branches into `integration-testing`, git is configured to
+always keep `integration-testing`'s version of these files via `.gitattributes`.
+
+This requires the `ours` merge driver to be configured once per clone:
+
+```bash
+git config merge.ours.driver true
+```
+
+---
+
+## Building RPMs
+
+1. Clone the repo and checkout the `integration-testing` branch.
+2. Run the build script:
+   ```bash
+   bash contrib/RPM/build_rpm.sh
+   ```
+   This handles tarball creation and calls `rpmbuild` automatically.
+
+### Manual steps (if needed)
+
+1. Create a tarball:
    ```bash
    git archive --format=tar.gz --prefix=freeDiameter-1.5.0/ HEAD > freeDiameter-1.5.0.tar.gz
