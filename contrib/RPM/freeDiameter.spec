@@ -1,7 +1,7 @@
 %global _build_id_links none
 
 %define autorelease(e:s:pb:n) %{?-p:0.}%{lua:
-    release_number = 11;
+    release_number = 12;
     base_release_number = tonumber(rpm.expand("%{?-b*}%{!?-b:1}"));
     print(release_number + base_release_number - 1);
 }%{?-e:.%{-e*}}%{?-s:.%{-s*}}%{!?-n:%{?dist}}
@@ -65,6 +65,7 @@ export CMAKE_SKIP_RPATH=TRUE
     -DBUILD_DICT_S6A:BOOL=ON \
     -DBUILD_DICT_GX:BOOL=ON \
     -DBUILD_DICT_CXDX:BOOL=ON \
+    -DBUILD_DBG_METRICS:BOOL=ON \
     -Wno-dev
 %cmake_build
 
@@ -141,6 +142,8 @@ install -m 0644 doc/freediameter.conf.sample %{buildroot}%{_sysconfdir}/freeDiam
 %{_libdir}/libfdproto.so
 
 %changelog
+* Thu Mar 13 2026 Keith Milner <kamilner@sslconsult.com> - 1.6.1-12
+- Re-added dbg_metrics extension for integration-testing branch
 * Thu Mar 13 2026 Keith Milner <kamilner@sslconsult.com> - 1.6.1-11
 - Added dict_gx (renamed from dict_3gpp_gx) and dict_cxdx extensions
 - Removed dbg_metrics extension (no longer available)
