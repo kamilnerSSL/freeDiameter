@@ -1,7 +1,7 @@
 %global _build_id_links none
 
 %define autorelease(e:s:pb:n) %{?-p:0.}%{lua:
-    release_number = 12;
+    release_number = 14
     base_release_number = tonumber(rpm.expand("%{?-b*}%{!?-b:1}"));
     print(release_number + base_release_number - 1);
 }%{?-e:.%{-e*}}%{?-s:.%{-s*}}%{!?-n:%{?dist}}
@@ -142,6 +142,10 @@ install -m 0644 doc/freediameter.conf.sample %{buildroot}%{_sysconfdir}/freeDiam
 %{_libdir}/libfdproto.so
 
 %changelog
+* Fri Mar 13 2026 Keith Milner <kamilner@sslconsult.com> - 1.6.1-13
+- Merged feature-3gpp-dicts: completed dict_cxdx with full 3GPP TS 29.229 command
+  set (UAR/UAA, MAR/MAA, SAR/SAA, LIR/LIA, RTR/RTA, PPR/PPA); resolved conflicts
+  with dict_dcca_3gpp by removing duplicate AVP definitions and adding dependency
 * Thu Mar 13 2026 Keith Milner <kamilner@sslconsult.com> - 1.6.1-12
 - Re-added dbg_metrics extension for integration-testing branch
 * Thu Mar 13 2026 Keith Milner <kamilner@sslconsult.com> - 1.6.1-11
