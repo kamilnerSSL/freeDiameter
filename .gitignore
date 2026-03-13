@@ -6,7 +6,8 @@ syntax: glob
 *.sum
 .cache/
 .hg
-build*
+build/
+build[0-9]*/
 compile_commands.json
 test.*
 GPATH
