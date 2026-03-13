@@ -217,34 +217,7 @@ int cxdx_dict_init(char * conffile)
     }
 
 
-    /* Feature-List-ID */
-    {
-      struct dict_avp_data data = 
-	{ 
-	  629, 					/* Code */
-	  VENDOR_3GPP_Id,			/* Vendor */
-	  "Feature-List-ID", 		        /* Name */
-	  AVP_FLAG_VENDOR,                      /* Fixed flags */
-	  AVP_FLAG_VENDOR,	                /* Fixed flag values */
-	  AVP_TYPE_UNSIGNED32 			/* base type of data */
-	};
-      CHECK_dict_new( DICT_AVP, &data , NULL, NULL);
-    }
-
-
-    /* Feature-List */
-    {
-      struct dict_avp_data data = 
-	{ 
-	  630, 					/* Code */
-	  VENDOR_3GPP_Id,			/* Vendor */
-	  "Feature-List", 		        /* Name */
-	  AVP_FLAG_VENDOR | AVP_FLAG_MANDATORY, /* Fixed flags */
-	  AVP_FLAG_VENDOR,		 	/* Fixed flag values */
-	  AVP_TYPE_UNSIGNED32 			/* base type of data */
-	};
-      CHECK_dict_new( DICT_AVP, &data , NULL, NULL);
-    }
+    /* Feature-List-ID (629) and Feature-List (630) are defined by dict_dcca_3gpp */
 
     /* Server-Capabilities */
     {
@@ -287,27 +260,19 @@ int cxdx_dict_init(char * conffile)
     }
 
 
-    /* Supported-Features */
+    /* Supported-Features (628) is defined by dict_dcca_3gpp; add Cx/Dx rules here */
     {
       struct dict_object * avp;
-      struct dict_avp_data data = 
-	{ 
-	  628, 					/* Code */
-	  VENDOR_3GPP_Id,			/* Vendor */
-	  "Supported-Features", 		/* Name */
-	  AVP_FLAG_VENDOR | AVP_FLAG_MANDATORY, /* Fixed flags */
-	  AVP_FLAG_MANDATORY,		 	/* Fixed flag values */
-	  AVP_TYPE_GROUPED 			/* base type of data */
-	};
-
-      struct local_rules_definition rules[] = 
-	{ 
+      struct local_rules_definition rules[] =
+	{
 	  {  "Vendor-Id", 	 RULE_REQUIRED, -1, 1 },
 	  {  "Feature-List-ID",  RULE_REQUIRED, -1, 1 },
 	  {  "Feature-List", 	 RULE_REQUIRED, -1, 1 }
 	};
 
-      CHECK_dict_new (DICT_AVP, &data , NULL, &avp);
+      CHECK_FCT( fd_dict_search( fd_g_config->cnf_dict, DICT_AVP, AVP_BY_NAME_AND_VENDOR,
+                 & (struct dict_avp_request){ .avp_vendor = VENDOR_3GPP_Id, .avp_name = "Supported-Features" },
+                 &avp, ENOENT) );
       PARSE_loc_rules(rules, avp, AVP_BY_NAME_ALL_VENDORS );
     }
   
@@ -1735,4 +1700,4 @@ int cxdx_dict_init(char * conffile)
 }
 
 
-EXTENSION_ENTRY("dict_cxdx", cxdx_dict_init);
+EXTENSION_ENTRY("dict_cxdx", cxdx_dict_init, "dict_dcca_3gpp");
