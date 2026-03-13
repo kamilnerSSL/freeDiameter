@@ -1,0 +1,3 @@
+# contrib/RPM is maintained exclusively in integration-testing.
+# When merging feature branches in, always keep integration-testing's version.
+contrib/RPM/** merge=ours
