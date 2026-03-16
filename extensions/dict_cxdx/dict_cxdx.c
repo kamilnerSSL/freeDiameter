@@ -648,10 +648,10 @@ int cxdx_dict_init(char * conffile)
         PARSE_loc_rules( rules, cmd, AVP_BY_NAME_ALL_VENDORS );
       }
 
-      /* SAR - Server-Assignment-Request (284, REQ) */
+      /* SAR - Server-Assignment-Request (301, REQ) */
       {
         struct dict_cmd_data data = {
-          284,
+          301,
           "Server-Assignment-Request",
           CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR,
           CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE
@@ -679,10 +679,10 @@ int cxdx_dict_init(char * conffile)
         PARSE_loc_rules( rules, cmd, AVP_BY_NAME_ALL_VENDORS );
       }
 
-      /* SAA - Server-Assignment-Answer (284, ANS) */
+      /* SAA - Server-Assignment-Answer (301, ANS) */
       {
         struct dict_cmd_data data = {
-          284,
+          301,
           "Server-Assignment-Answer",
           CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR,
           CMD_FLAG_PROXIABLE
@@ -714,10 +714,10 @@ int cxdx_dict_init(char * conffile)
         PARSE_loc_rules( rules, cmd, AVP_BY_NAME_ALL_VENDORS );
       }
 
-      /* LIR - Location-Info-Request (285, REQ) */
+      /* LIR - Location-Info-Request (302, REQ) */
       {
         struct dict_cmd_data data = {
-          285,
+          302,
           "Location-Info-Request",
           CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR,
           CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE
@@ -740,10 +740,10 @@ int cxdx_dict_init(char * conffile)
         PARSE_loc_rules( rules, cmd, AVP_BY_NAME_ALL_VENDORS );
       }
 
-      /* LIA - Location-Info-Answer (285, ANS) */
+      /* LIA - Location-Info-Answer (302, ANS) */
       {
         struct dict_cmd_data data = {
-          285,
+          302,
           "Location-Info-Answer",
           CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR,
           CMD_FLAG_PROXIABLE
@@ -770,10 +770,10 @@ int cxdx_dict_init(char * conffile)
         PARSE_loc_rules( rules, cmd, AVP_BY_NAME_ALL_VENDORS );
       }
 
-      /* RTR - Registration-Termination-Request (287, REQ) */
+      /* RTR - Registration-Termination-Request (304, REQ) */
       {
         struct dict_cmd_data data = {
-          287,
+          304,
           "Registration-Termination-Request",
           CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR,
           CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE
@@ -798,10 +798,10 @@ int cxdx_dict_init(char * conffile)
         PARSE_loc_rules( rules, cmd, AVP_BY_NAME_ALL_VENDORS );
       }
 
-      /* RTA - Registration-Termination-Answer (287, ANS) */
+      /* RTA - Registration-Termination-Answer (304, ANS) */
       {
         struct dict_cmd_data data = {
-          287,
+          304,
           "Registration-Termination-Answer",
           CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR,
           CMD_FLAG_PROXIABLE
@@ -824,10 +824,10 @@ int cxdx_dict_init(char * conffile)
         PARSE_loc_rules( rules, cmd, AVP_BY_NAME_ALL_VENDORS );
       }
 
-      /* PPR - Push-Profile-Request (288, REQ) */
+      /* PPR - Push-Profile-Request (305, REQ) */
       {
         struct dict_cmd_data data = {
-          288,
+          305,
           "Push-Profile-Request",
           CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR,
           CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE
@@ -852,10 +852,10 @@ int cxdx_dict_init(char * conffile)
         PARSE_loc_rules( rules, cmd, AVP_BY_NAME_ALL_VENDORS );
       }
 
-      /* PPA - Push-Profile-Answer (288, ANS) */
+      /* PPA - Push-Profile-Answer (305, ANS) */
       {
         struct dict_cmd_data data = {
-          288,
+          305,
           "Push-Profile-Answer",
           CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE | CMD_FLAG_ERROR,
           CMD_FLAG_PROXIABLE
