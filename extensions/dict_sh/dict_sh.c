@@ -36,8 +36,6 @@
 
 #include <freeDiameter/extension.h>
 
-/* The content of this file follows the same structure as dict_base_proto.c */
-
 #define CHECK_dict_new( _type, _data, _parent, _ref )	\
 	CHECK_FCT(  fd_dict_new( fd_g_config->cnf_dict, (_type), (_data), (_parent), (_ref))  );
 
@@ -45,6 +43,7 @@
 	CHECK_FCT(  fd_dict_search( fd_g_config->cnf_dict, (_type), (_criteria), (_what), (_result), ENOENT) );
 
 struct local_rules_definition {
+	vendor_id_t		vendor;
 	char *			avp_name;
 	enum rule_position	position;
 	int 			min;
@@ -53,9 +52,14 @@ struct local_rules_definition {
 
 #define RULE_ORDER( _position ) ((((_position) == RULE_FIXED_HEAD) || ((_position) == RULE_FIXED_TAIL)) ? 1 : 0 )
 
+/* Attention! Uses AVP_BY_NAME_AND_VENDOR so vendor-specific AVPs are found correctly. */
 #define PARSE_loc_rules( _rulearray, _parent) {						\
 	int __ar;									\
 	for (__ar=0; __ar < sizeof(_rulearray) / sizeof((_rulearray)[0]); __ar++) {	\
+		struct dict_avp_request __avp = {					\
+			.avp_vendor = (_rulearray)[__ar].vendor,			\
+			.avp_name   = (_rulearray)[__ar].avp_name,			\
+		};									\
 		struct dict_rule_data __data = { NULL, 					\
 			(_rulearray)[__ar].position,					\
 			0, 								\
@@ -63,18 +67,18 @@ struct local_rules_definition {
 			(_rulearray)[__ar].max};					\
 		__data.rule_order = RULE_ORDER(__data.rule_position);			\
 		CHECK_FCT(  fd_dict_search( 						\
-			fd_g_config->cnf_dict,								\
+			fd_g_config->cnf_dict,						\
 			DICT_AVP, 							\
-			AVP_BY_NAME, 							\
-			(_rulearray)[__ar].avp_name, 					\
+			AVP_BY_NAME_AND_VENDOR, 					\
+			&__avp,								\
 			&__data.rule_avp, 0 ) );					\
 		if ( !__data.rule_avp ) {						\
-			LOG_E("AVP Not found: '%s'", (_rulearray)[__ar].avp_name );	\
+			LOG_E("AVP Not found: '%s'", __avp.avp_name );			\
 			return ENOENT;							\
 		}									\
 		CHECK_FCT_DO( fd_dict_new( fd_g_config->cnf_dict, DICT_RULE, &__data, _parent, NULL),	\
 			{								\
-				LOG_E("Error on rule with AVP '%s'", (_rulearray)[__ar].avp_name );			\
+				LOG_E("Error on rule with AVP '%s'", __avp.avp_name );	\
 				return EINVAL;						\
 			} );								\
 	}										\
@@ -94,28 +98,28 @@ int sh_app_init(void)
 		CHECK_dict_new(DICT_COMMAND, &data, sh_app, &cmd);
 		struct local_rules_definition rules[] =
 		{
-			{ "Session-Id",			RULE_FIXED_HEAD, 1, 1 },
-			{ "Vendor-Specific-Application-Id",	RULE_REQUIRED, 1, 1 },
-			{ "Auth-Session-State",		RULE_REQUIRED, 1, 1 },
-			{ "Origin-Host",		RULE_REQUIRED, 1, 1 },
-			{ "Origin-Realm",		RULE_REQUIRED, 1, 1 },
-			{ "Destination-Realm",		RULE_REQUIRED, 1, 1 },
-			{ "User-Identity",		RULE_REQUIRED, 1, 1 },
-			{ "Data-Reference",		RULE_REQUIRED, 1, -1 },
-			{ "Destination-Host",		RULE_OPTIONAL, 0, 1 },
-			{ "Supported-Features",		RULE_OPTIONAL, 0, -1 },
-			{ "Server-Name",		RULE_OPTIONAL, 0, 1 },
-			{ "Service-Indication",		RULE_OPTIONAL, 0, -1 },
-			{ "Identity-Set",		RULE_OPTIONAL, 0, -1 },
-			{ "Requested-Domain",		RULE_OPTIONAL, 0, 1 },
-			{ "Current-Location",		RULE_OPTIONAL, 0, 1 },
-			{ "UDR-Flags",			RULE_OPTIONAL, 0, 1 },
-			{ "Requested-Nodes",		RULE_OPTIONAL, 0, 1 },
-			{ "Serving-Node-Indication",	RULE_OPTIONAL, 0, 1 },
-			{ "Pre-paging-Supported",	RULE_OPTIONAL, 0, 1 },
-			{ "Local-Time-Zone-Indication",	RULE_OPTIONAL, 0, 1 },
-			{ "Proxy-Info",			RULE_OPTIONAL, 0, -1 },
-			{ "Route-Record",		RULE_OPTIONAL, 0, -1 }
+			{ 0,     "Session-Id",				RULE_FIXED_HEAD, 1, 1 },
+			{ 0,     "Vendor-Specific-Application-Id",	RULE_REQUIRED,   1, 1 },
+			{ 0,     "Auth-Session-State",			RULE_REQUIRED,   1, 1 },
+			{ 0,     "Origin-Host",				RULE_REQUIRED,   1, 1 },
+			{ 0,     "Origin-Realm",			RULE_REQUIRED,   1, 1 },
+			{ 0,     "Destination-Realm",			RULE_REQUIRED,   1, 1 },
+			{ 10415, "User-Identity",			RULE_REQUIRED,   1, 1 },
+			{ 10415, "Data-Reference",			RULE_REQUIRED,   1, -1 },
+			{ 0,     "Destination-Host",			RULE_OPTIONAL,   0, 1 },
+			{ 10415, "Supported-Features",			RULE_OPTIONAL,   0, -1 },
+			{ 10415, "Server-Name",				RULE_OPTIONAL,   0, 1 },
+			{ 10415, "Service-Indication",			RULE_OPTIONAL,   0, -1 },
+			{ 10415, "Identity-Set",			RULE_OPTIONAL,   0, -1 },
+			{ 10415, "Requested-Domain",			RULE_OPTIONAL,   0, 1 },
+			{ 10415, "Current-Location",			RULE_OPTIONAL,   0, 1 },
+			{ 10415, "UDR-Flags",				RULE_OPTIONAL,   0, 1 },
+			{ 10415, "Requested-Nodes",			RULE_OPTIONAL,   0, 1 },
+			{ 10415, "Serving-Node-Indication",		RULE_OPTIONAL,   0, 1 },
+			{ 10415, "Pre-paging-Supported",		RULE_OPTIONAL,   0, 1 },
+			{ 10415, "Local-Time-Zone-Indication",		RULE_OPTIONAL,   0, 1 },
+			{ 0,     "Proxy-Info",				RULE_OPTIONAL,   0, -1 },
+			{ 0,     "Route-Record",			RULE_OPTIONAL,   0, -1 }
 		};
 		PARSE_loc_rules(rules, cmd);
 	}
@@ -123,22 +127,22 @@ int sh_app_init(void)
 	/* User-Data-Answer */
 	{
 		struct dict_object *cmd;
-		struct dict_cmd_data data = { 306, "User-Data-Answer", CMD_FLAG_PROXIABLE, CMD_FLAG_PROXIABLE };
+		struct dict_cmd_data data = { 306, "User-Data-Answer", CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE, CMD_FLAG_PROXIABLE };
 		CHECK_dict_new(DICT_COMMAND, &data, sh_app, &cmd);
 		struct local_rules_definition rules[] =
 		{
-			{ "Session-Id",			RULE_FIXED_HEAD, 1, 1 },
-			{ "Vendor-Specific-Application-Id",	RULE_REQUIRED, 1, 1 },
-			{ "Auth-Session-State",		RULE_REQUIRED, 1, 1 },
-			{ "Origin-Host",		RULE_REQUIRED, 1, 1 },
-			{ "Origin-Realm",		RULE_REQUIRED, 1, 1 },
-			{ "Result-Code",		RULE_OPTIONAL, 0, 1 },
-			{ "Experimental-Result",	RULE_OPTIONAL, 0, 1 },
-			{ "Supported-Features",		RULE_OPTIONAL, 0, -1 },
-			{ "User-Data-29.329",		RULE_OPTIONAL, 0, 1 },
-			{ "Failed-AVP",			RULE_OPTIONAL, 0, 1 },
-			{ "Proxy-Info",			RULE_OPTIONAL, 0, -1 },
-			{ "Route-Record",		RULE_OPTIONAL, 0, -1 }
+			{ 0,     "Session-Id",				RULE_FIXED_HEAD, 1, 1 },
+			{ 0,     "Vendor-Specific-Application-Id",	RULE_REQUIRED,   1, 1 },
+			{ 0,     "Auth-Session-State",			RULE_REQUIRED,   1, 1 },
+			{ 0,     "Origin-Host",				RULE_REQUIRED,   1, 1 },
+			{ 0,     "Origin-Realm",			RULE_REQUIRED,   1, 1 },
+			{ 0,     "Result-Code",				RULE_OPTIONAL,   0, 1 },
+			{ 0,     "Experimental-Result",			RULE_OPTIONAL,   0, 1 },
+			{ 10415, "Supported-Features",			RULE_OPTIONAL,   0, -1 },
+			{ 10415, "User-Data-29.329",			RULE_OPTIONAL,   0, 1 },
+			{ 0,     "Failed-AVP",				RULE_OPTIONAL,   0, 1 },
+			{ 0,     "Proxy-Info",				RULE_OPTIONAL,   0, -1 },
+			{ 0,     "Route-Record",			RULE_OPTIONAL,   0, -1 }
 		};
 		PARSE_loc_rules(rules, cmd);
 	}
@@ -150,12 +154,8 @@ extern int add_sh_avps(void);
 
 static int dict_sh_entry(char * conffile)
 {
-	/* AVPs */
 	CHECK_FCT(add_sh_avps());
-
-	/* Application and Commands */
 	CHECK_FCT(sh_app_init());
-
 	LOG_D("Extension 'Dictionary definitions for 3GPP Sh Interface' initialized");
 	return 0;
 }

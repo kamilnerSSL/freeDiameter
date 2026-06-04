@@ -1,11 +1,11 @@
-# The dict_sh extension
-PROJECT("Diameter Sh (3GPP) dictionary definitions" C)
+# The dict_dcca_3gpp extension
+PROJECT("Diameter DCCA (3GPP) dictionary definitions" C)
 
 # Compile as a module
-FD_ADD_EXTENSION(dict_sh dict_sh.c add_sh_avps.c)
+FD_ADD_EXTENSION(dict_dcca_3gpp dict_dcca_3gpp.c add_avps.c)
 
 ####
 ## INSTALL section ##
-INSTALL(TARGETS dict_sh
+INSTALL(TARGETS dict_dcca_3gpp
 	LIBRARY DESTINATION ${INSTALL_EXTENSIONS_SUFFIX}
-	COMPONENT freeDiameter-dictionary-sh)
+	COMPONENT freeDiameter-dictionary-dcca-3gpp)
