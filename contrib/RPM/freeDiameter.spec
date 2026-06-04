@@ -1,7 +1,7 @@
 %global _build_id_links none
 
 %define autorelease(e:s:pb:n) %{?-p:0.}%{lua:
-    release_number = 16
+    release_number = 17
     base_release_number = tonumber(rpm.expand("%{?-b*}%{!?-b:1}"));
     print(release_number + base_release_number - 1);
 }%{?-e:.%{-e*}}%{?-s:.%{-s*}}%{!?-n:%{?dist}}
@@ -65,6 +65,7 @@ export CMAKE_SKIP_RPATH=TRUE
     -DBUILD_DICT_S6A:BOOL=ON \
     -DBUILD_DICT_GX:BOOL=ON \
     -DBUILD_DICT_CXDX:BOOL=ON \
+    -DBUILD_DICT_SH:BOOL=ON \
     -DBUILD_DBG_METRICS:BOOL=ON \
     -Wno-dev
 %cmake_build
@@ -142,6 +143,16 @@ install -m 0644 doc/freediameter.conf.sample %{buildroot}%{_sysconfdir}/freeDiam
 %{_libdir}/libfdproto.so
 
 %changelog
+* Thu Jun 04 2026 Keith Milner <kamilner@sslconsult.com> - 1.6.1-17
+- fix(dict_sh): Correct broken extraction of Sh interface (TS 29.329) from dict_dcca_3gpp
+- Fix PARSE_loc_rules to use AVP_BY_NAME_AND_VENDOR; AVP_BY_NAME only searches
+  vendor-0 so all vendor-10415 AVP lookups in UDR/UDA command rules silently
+  returned NULL and the extension failed to initialize on every load
+- Fix User-Data-Answer cmd_flag_mask: missing CMD_FLAG_REQUEST caused fd_dict_new
+  to reject the command definition (dictionary.c enforces this for all commands)
+- Move dict_sh.c and add_sh_avps.c into extensions/dict_sh/ and wire into the
+  build system; restore dict_dcca_3gpp/CMakeLists.txt which was overwritten
+- Add BUILD_DICT_SH to spec cmake flags
 * Thu May 04 2026 Keith Milner <kamilner@sslconsult.com> - 1.6.1-16
 - feat(dict): Add new dict_sh extension for 3GPP Sh interface (TS 29.329)
 - Removed previous incomplete Sh definitions from dict-dcca-3gpp
