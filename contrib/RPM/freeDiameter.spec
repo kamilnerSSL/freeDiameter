@@ -1,7 +1,7 @@
 %global _build_id_links none
 
 %define autorelease(e:s:pb:n) %{?-p:0.}%{lua:
-    release_number = 15
+    release_number = 16
     base_release_number = tonumber(rpm.expand("%{?-b*}%{!?-b:1}"));
     print(release_number + base_release_number - 1);
 }%{?-e:.%{-e*}}%{?-s:.%{-s*}}%{!?-n:%{?dist}}
@@ -142,6 +142,9 @@ install -m 0644 doc/freediameter.conf.sample %{buildroot}%{_sysconfdir}/freeDiam
 %{_libdir}/libfdproto.so
 
 %changelog
+* Thu May 04 2026 Keith Milner <kamilner@sslconsult.com> - 1.6.1-16
+- feat(dict): Add new dict_sh extension for 3GPP Sh interface (TS 29.329)
+- Removed previous incomplete Sh definitions from dict-dcca-3gpp
 * Mon Mar 16 2026 Keith Milner <kamilner@sslconsult.com> - 1.6.1-15
 - Fixed dict_cxdx command codes for SAR/SAA (301), LIR/LIA (302),
   RTR/RTA (304), PPR/PPA (305) per 3GPP TS 29.229 / IANA registry;
