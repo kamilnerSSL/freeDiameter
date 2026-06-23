@@ -1,7 +1,7 @@
 %global _build_id_links none
 
 %define autorelease(e:s:pb:n) %{?-p:0.}%{lua:
-    release_number = 17
+    release_number = 18
     base_release_number = tonumber(rpm.expand("%{?-b*}%{!?-b:1}"));
     print(release_number + base_release_number - 1);
 }%{?-e:.%{-e*}}%{?-s:.%{-s*}}%{!?-n:%{?dist}}
@@ -65,7 +65,6 @@ export CMAKE_SKIP_RPATH=TRUE
     -DBUILD_DICT_S6A:BOOL=ON \
     -DBUILD_DICT_GX:BOOL=ON \
     -DBUILD_DICT_CXDX:BOOL=ON \
-    -DBUILD_DICT_SH:BOOL=ON \
     -DBUILD_DBG_METRICS:BOOL=ON \
     -Wno-dev
 %cmake_build
@@ -143,6 +142,18 @@ install -m 0644 doc/freediameter.conf.sample %{buildroot}%{_sysconfdir}/freeDiam
 %{_libdir}/libfdproto.so
 
 %changelog
+* Tue Jun 10 2026 Keith Milner <kamilner@sslconsult.com> - 1.6.1-18
+- Re-absorb 3GPP Sh interface (TS 29.329) into dict_dcca_3gpp; remove
+  standalone dict_sh extension
+- Fix all four Sh answer command masks (UDA/PUA/SNA/PNA): missing
+  CMD_FLAG_REQUEST caused fd_dict_new to reject every answer registration
+- Fix sh_app_init() call order: must run after add_avps() so Sh AVPs exist
+- Remove duplicate TS 29.329 AVP block left over from add_sh_avps.c merge
+- Correct Vodafone vendor ID from 4329 (Comverse Networks) to 12357;
+  add Comverse Networks vendor (4329) as a separate entry
+- Add full AVP rules for Push-Notification-Request/Answer (cmd 309)
+- Add Comverse Networks AVP 4329/1110 (placeholder name) seen in PNR/PNA
+- Remove BUILD_DICT_SH from cmake flags (extension absorbed into dict_dcca_3gpp)
 * Thu Jun 04 2026 Keith Milner <kamilner@sslconsult.com> - 1.6.1-17
 - fix(dict_sh): Correct broken extraction of Sh interface (TS 29.329) from dict_dcca_3gpp
 - Fix PARSE_loc_rules to use AVP_BY_NAME_AND_VENDOR; AVP_BY_NAME only searches
