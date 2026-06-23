@@ -144,6 +144,112 @@ struct local_rules_definition {
 #define enumval_def_os( _len_, _val_, _str_ ) \
 		{ _str_, 		{ .os = { .data = (unsigned char *)_val_, .len = _len_ }}}
 
+static int sh_app_init(void)
+{
+	struct dict_object *sh_app;
+	struct dict_application_data app_data = { 16777217, "Diameter Sh Application" };
+	CHECK_dict_new(DICT_APPLICATION, &app_data, NULL, &sh_app);
+
+	/* User-Data-Request */
+	{
+		struct dict_object *cmd;
+		struct dict_cmd_data data = { 306, "User-Data-Request", CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE, CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE };
+		CHECK_dict_new(DICT_COMMAND, &data, sh_app, &cmd);
+		struct local_rules_definition rules[] =
+		{
+			{ 0,     "Session-Id",				RULE_FIXED_HEAD, 1, 1 },
+			{ 0,     "Vendor-Specific-Application-Id",	RULE_REQUIRED,   1, 1 },
+			{ 0,     "Auth-Session-State",			RULE_REQUIRED,   1, 1 },
+			{ 0,     "Origin-Host",				RULE_REQUIRED,   1, 1 },
+			{ 0,     "Origin-Realm",			RULE_REQUIRED,   1, 1 },
+			{ 0,     "Destination-Realm",			RULE_REQUIRED,   1, 1 },
+			{ 10415, "User-Identity",			RULE_REQUIRED,   1, 1 },
+			{ 10415, "Data-Reference",			RULE_REQUIRED,   1, -1 },
+			{ 0,     "Destination-Host",			RULE_OPTIONAL,   0, 1 },
+			{ 10415, "Supported-Features",			RULE_OPTIONAL,   0, -1 },
+			{ 10415, "Server-Name",				RULE_OPTIONAL,   0, 1 },
+			{ 10415, "Service-Indication",			RULE_OPTIONAL,   0, -1 },
+			{ 10415, "Identity-Set",			RULE_OPTIONAL,   0, -1 },
+			{ 10415, "Requested-Domain",			RULE_OPTIONAL,   0, 1 },
+			{ 10415, "Current-Location",			RULE_OPTIONAL,   0, 1 },
+			{ 10415, "UDR-Flags",				RULE_OPTIONAL,   0, 1 },
+			{ 10415, "Requested-Nodes",			RULE_OPTIONAL,   0, 1 },
+			{ 10415, "Serving-Node-Indication",		RULE_OPTIONAL,   0, 1 },
+			{ 10415, "Pre-paging-Supported",		RULE_OPTIONAL,   0, 1 },
+			{ 10415, "Local-Time-Zone-Indication",		RULE_OPTIONAL,   0, 1 },
+			{ 0,     "Proxy-Info",				RULE_OPTIONAL,   0, -1 },
+			{ 0,     "Route-Record",			RULE_OPTIONAL,   0, -1 }
+		};
+		PARSE_loc_rules(rules, cmd);
+	}
+
+	/* User-Data-Answer */
+	{
+		struct dict_object *cmd;
+		struct dict_cmd_data data = { 306, "User-Data-Answer", CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE, CMD_FLAG_PROXIABLE };
+		CHECK_dict_new(DICT_COMMAND, &data, sh_app, &cmd);
+		struct local_rules_definition rules[] =
+		{
+			{ 0,     "Session-Id",				RULE_FIXED_HEAD, 1, 1 },
+			{ 0,     "Vendor-Specific-Application-Id",	RULE_REQUIRED,   1, 1 },
+			{ 0,     "Auth-Session-State",			RULE_REQUIRED,   1, 1 },
+			{ 0,     "Origin-Host",				RULE_REQUIRED,   1, 1 },
+			{ 0,     "Origin-Realm",			RULE_REQUIRED,   1, 1 },
+			{ 0,     "Result-Code",				RULE_OPTIONAL,   0, 1 },
+			{ 0,     "Experimental-Result",			RULE_OPTIONAL,   0, 1 },
+			{ 10415, "Supported-Features",			RULE_OPTIONAL,   0, -1 },
+			{ 10415, "User-Data-29.329",			RULE_OPTIONAL,   0, 1 },
+			{ 0,     "Failed-AVP",				RULE_OPTIONAL,   0, 1 },
+			{ 0,     "Proxy-Info",				RULE_OPTIONAL,   0, -1 },
+			{ 0,     "Route-Record",			RULE_OPTIONAL,   0, -1 }
+		};
+		PARSE_loc_rules(rules, cmd);
+	}
+
+	/* Profile-Update-Request */
+	{
+		struct dict_object *cmd;
+		struct dict_cmd_data data = { 307, "Profile-Update-Request", CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE, CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE };
+		CHECK_dict_new(DICT_COMMAND, &data, sh_app, &cmd);
+	}
+
+	/* Profile-Update-Answer */
+	{
+		struct dict_object *cmd;
+		struct dict_cmd_data data = { 307, "Profile-Update-Answer", CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE, CMD_FLAG_PROXIABLE };
+		CHECK_dict_new(DICT_COMMAND, &data, sh_app, &cmd);
+	}
+
+	/* Subscribe-Notifications-Request */
+	{
+		struct dict_object *cmd;
+		struct dict_cmd_data data = { 308, "Subscribe-Notifications-Request", CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE, CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE };
+		CHECK_dict_new(DICT_COMMAND, &data, sh_app, &cmd);
+	}
+
+	/* Subscribe-Notifications-Answer */
+	{
+		struct dict_object *cmd;
+		struct dict_cmd_data data = { 308, "Subscribe-Notifications-Answer", CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE, CMD_FLAG_PROXIABLE };
+		CHECK_dict_new(DICT_COMMAND, &data, sh_app, &cmd);
+	}
+
+	/* Push-Notification-Request */
+	{
+		struct dict_object *cmd;
+		struct dict_cmd_data data = { 309, "Push-Notification-Request", CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE, CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE };
+		CHECK_dict_new(DICT_COMMAND, &data, sh_app, &cmd);
+	}
+
+	/* Push-Notification-Answer */
+	{
+		struct dict_object *cmd;
+		struct dict_cmd_data data = { 309, "Push-Notification-Answer", CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE, CMD_FLAG_PROXIABLE };
+		CHECK_dict_new(DICT_COMMAND, &data, sh_app, &cmd);
+	}
+
+	return 0;
+}
 
 static int dict_dcca_3gpp_entry(char * conffile)
 {
@@ -159,6 +265,10 @@ static int dict_dcca_3gpp_entry(char * conffile)
                 }
                 {
                         struct dict_vendor_data vendor_data = { 5535, "3GPP2" };
+                        CHECK_FCT(fd_dict_new(fd_g_config->cnf_dict, DICT_VENDOR, &vendor_data, NULL, NULL));
+                }
+                {
+                        struct dict_vendor_data vendor_data = { 12357, "Vodafone" };
                         CHECK_FCT(fd_dict_new(fd_g_config->cnf_dict, DICT_VENDOR, &vendor_data, NULL, NULL));
                 }
 
@@ -348,6 +458,9 @@ static int dict_dcca_3gpp_entry(char * conffile)
 
 	extern int add_avps();
 	CHECK_FCT( add_avps() );
+
+	/* Application and Commands — must run after add_avps() so Sh AVPs exist */
+	CHECK_FCT(sh_app_init());
 
 	/*==================================================================*/
 	/* Rules section                                                    */
@@ -1036,6 +1149,36 @@ static int dict_dcca_3gpp_entry(char * conffile)
 			};
 			PARSE_loc_rules(rules, rule_avp);
         }
+
+	/*==================================================================*/
+	/* 3GPP TS 29.329 V15.2.0 (2019-09)                                 */
+	/*==================================================================*/
+	{
+		struct dict_object *rule_avp;
+		struct dict_avp_request vpa;
+		vpa.avp_vendor = 10415;
+		vpa.avp_name = "User-Identity";
+		CHECK_dict_search(DICT_AVP, AVP_BY_NAME_AND_VENDOR, &vpa, &rule_avp);
+		struct local_rules_definition rules[] =
+			{
+				{ 10415, "Public-Identity",	RULE_OPTIONAL, 0, -1 },
+				{ 10415, "MSISDN",		RULE_OPTIONAL, 0, 1 },
+			};
+			PARSE_loc_rules(rules, rule_avp);
+	}
+	{
+		struct dict_object *rule_avp;
+		struct dict_avp_request vpa;
+		vpa.avp_vendor = 10415;
+		vpa.avp_name = "Call-Reference-Info";
+		CHECK_dict_search(DICT_AVP, AVP_BY_NAME_AND_VENDOR, &vpa, &rule_avp);
+		struct local_rules_definition rules[] =
+			{
+				{ 10415, "Call-Reference-Number",	RULE_REQUIRED, 1, 1 },
+				{ 10415, "AS-Number",			RULE_REQUIRED, 1, 1 },
+			};
+			PARSE_loc_rules(rules, rule_avp);
+	}
 
 	LOG_D( "Extension 'Dictionary definitions for DCCA 3GPP' initialized");
 	return 0;
