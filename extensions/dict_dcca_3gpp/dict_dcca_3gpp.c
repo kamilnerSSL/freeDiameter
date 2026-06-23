@@ -268,6 +268,10 @@ static int dict_dcca_3gpp_entry(char * conffile)
                         CHECK_FCT(fd_dict_new(fd_g_config->cnf_dict, DICT_VENDOR, &vendor_data, NULL, NULL));
                 }
                 {
+                        struct dict_vendor_data vendor_data = { 4329, "Comverse Networks" };
+                        CHECK_FCT(fd_dict_new(fd_g_config->cnf_dict, DICT_VENDOR, &vendor_data, NULL, NULL));
+                }
+                {
                         struct dict_vendor_data vendor_data = { 12357, "Vodafone" };
                         CHECK_FCT(fd_dict_new(fd_g_config->cnf_dict, DICT_VENDOR, &vendor_data, NULL, NULL));
                 }
