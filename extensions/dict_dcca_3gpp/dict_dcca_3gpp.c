@@ -239,6 +239,23 @@ static int sh_app_init(void)
 		struct dict_object *cmd;
 		struct dict_cmd_data data = { 309, "Push-Notification-Request", CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE, CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE };
 		CHECK_dict_new(DICT_COMMAND, &data, sh_app, &cmd);
+		struct local_rules_definition rules[] =
+		{
+			{ 0,     "Session-Id",				RULE_FIXED_HEAD, 1, 1 },
+			{ 0,     "Vendor-Specific-Application-Id",	RULE_REQUIRED,   1, 1 },
+			{ 0,     "Auth-Session-State",			RULE_REQUIRED,   1, 1 },
+			{ 0,     "Origin-Host",				RULE_REQUIRED,   1, 1 },
+			{ 0,     "Origin-Realm",			RULE_REQUIRED,   1, 1 },
+			{ 0,     "Destination-Host",			RULE_REQUIRED,   1, 1 },
+			{ 0,     "Destination-Realm",			RULE_REQUIRED,   1, 1 },
+			{ 10415, "User-Identity",			RULE_REQUIRED,   1, 1 },
+			{ 10415, "User-Data-29.329",			RULE_OPTIONAL,   0, 1 },
+			{ 10415, "Supported-Features",			RULE_OPTIONAL,   0, -1 },
+			{ 4329,  "Comverse-4329-1110",			RULE_OPTIONAL,   0, 1 },
+			{ 0,     "Proxy-Info",				RULE_OPTIONAL,   0, -1 },
+			{ 0,     "Route-Record",			RULE_OPTIONAL,   0, -1 }
+		};
+		PARSE_loc_rules(rules, cmd);
 	}
 
 	/* Push-Notification-Answer */
@@ -246,6 +263,26 @@ static int sh_app_init(void)
 		struct dict_object *cmd;
 		struct dict_cmd_data data = { 309, "Push-Notification-Answer", CMD_FLAG_REQUEST | CMD_FLAG_PROXIABLE, CMD_FLAG_PROXIABLE };
 		CHECK_dict_new(DICT_COMMAND, &data, sh_app, &cmd);
+		struct local_rules_definition rules[] =
+		{
+			{ 0,     "Session-Id",				RULE_FIXED_HEAD, 1, 1 },
+			{ 0,     "Vendor-Specific-Application-Id",	RULE_REQUIRED,   1, 1 },
+			{ 0,     "Auth-Session-State",			RULE_REQUIRED,   1, 1 },
+			{ 0,     "Origin-Host",				RULE_REQUIRED,   1, 1 },
+			{ 0,     "Origin-Realm",			RULE_REQUIRED,   1, 1 },
+			{ 0,     "Result-Code",				RULE_OPTIONAL,   0, 1 },
+			{ 0,     "Experimental-Result",			RULE_OPTIONAL,   0, 1 },
+			{ 10415, "User-Identity",			RULE_OPTIONAL,   0, 1 },
+			{ 10415, "User-Data-29.329",			RULE_OPTIONAL,   0, 1 },
+			{ 10415, "Supported-Features",			RULE_OPTIONAL,   0, -1 },
+			{ 4329,  "Comverse-4329-1110",			RULE_OPTIONAL,   0, 1 },
+			{ 0,     "Failed-AVP",				RULE_OPTIONAL,   0, 1 },
+			{ 0,     "Error-Message",			RULE_OPTIONAL,   0, 1 },
+			{ 0,     "Error-Reporting-Host",		RULE_OPTIONAL,   0, 1 },
+			{ 0,     "Proxy-Info",				RULE_OPTIONAL,   0, -1 },
+			{ 0,     "Route-Record",			RULE_OPTIONAL,   0, -1 }
+		};
+		PARSE_loc_rules(rules, cmd);
 	}
 
 	return 0;

@@ -21433,5 +21433,24 @@ int add_avps()
 		CHECK_dict_new(DICT_AVP, &data, NULL, NULL);
 	};
 
+	/*==================================================================*/
+	/* Comverse Networks (vendor 4329) AVPs observed in Sh PNR/PNA      */
+	/*==================================================================*/
+
+	/* Comverse-4329-1110, OctetString, code 1110                       */
+	/* Observed in Push-Notification-Request/Answer on Sh interface.    */
+	/* Placeholder name — rename when vendor spec is available.         */
+	{
+		struct dict_avp_data data = {
+			1110,	/* Code */
+			4329,	/* Vendor */
+			"Comverse-4329-1110",	/* Name */
+			AVP_FLAG_VENDOR,	/* Fixed flags */
+			AVP_FLAG_VENDOR,	/* Fixed flag values */
+			AVP_TYPE_OCTETSTRING	/* base type of data */
+		};
+		CHECK_dict_new(DICT_AVP, &data, NULL, NULL);
+	};
+
 	return 0;
 } /* add_avps() */
